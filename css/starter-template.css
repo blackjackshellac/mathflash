@@ -1,0 +1,48 @@
+body {
+	padding-top: 50px;
+	padding-left: 50px;
+	padding-right: 50px;
+}
+.big_title {
+	text-align: center;
+}
+
+td.math {
+	vertical-align: middle;
+	text-align: right;
+	border: 1px solid black;
+	font-size: 32px;
+	font-family: monospace;
+	padding: 10px;
+	align-content: center;
+}
+table.math {
+	width: 50%;
+	border: none solid black;
+	padding: 5px;
+}
+table.table {
+	border: none;
+}
+td.stars {
+	text-align: center;
+	padding: 2px;
+	border: none solid grey;
+}
+
+input[type=text].math {
+	vertical-align: middle;
+	text-align: right;
+	font-size: 32px;
+	font-family: monospace;
+	width: 100px;
+}
+button.math {
+	vertical-align: middle;
+	text-align: right;
+	font-size: 32px;
+	font-family: monospace;
+}
+.borderless {
+	border:none;
+}
