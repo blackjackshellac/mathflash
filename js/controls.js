@@ -16,6 +16,8 @@ function init_controls() {
         if (!option) {
           set_alert("alert", "warning", "using defaults for name="+name);
           option = getOptionsDefault();
+          setOptions(options);
+          setName(NAME_DEF);
         }
         setOptionsControls(name, option);
       } else if (statusTxt == "error") {
@@ -25,13 +27,18 @@ function init_controls() {
   });
 
   $("#addition,#subtraction,#multiplication,#division").click(function(e) {
-    var div = title_from(e);
+    var oper = title_from(e);
     var content = "content/maths.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
         set_alert("alert", statusTxt, content + " loaded successfully!");
-        localStorage.setItem("operation", div);
-        setOperation(div);
+        localStorage.setItem("operation", oper);
+        setOperation(oper);
+
+        var nums = getNumbers(oper);
+
+        $("#left_val").text(nums.left);
+        $("#right_val").text(nums.right);
 
         var cdiv = $("#content");
         createStars(cdiv);

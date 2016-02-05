@@ -1,8 +1,8 @@
-NAME_DEF="default";
-LEFT_MAX="10";
-RIGHT_MAX="10";
-NUMBER_MAX="50";
-TIMEOUT_MAX="0";  // no timeout
+NAME_DEF = "default";
+LEFT_MAX = "10";
+RIGHT_MAX = "10";
+NUMBER_MAX = "50";
+TIMEOUT_MAX = "0"; // no timeout
 
 function getOptionsDefault() {
   var options = {
@@ -22,8 +22,12 @@ function setOptionsControls(name, option) {
   $("#timeout_max").val(option.timeout_max);
 }
 
+function setName(name) {
+  localStorage["name"] = name;
+}
+
 function setOptions(options) {
-  localStorage["options"]=JSON.stringify(options);
+  localStorage["options"] = JSON.stringify(options);
 }
 
 function getOption(value, def) {
@@ -34,14 +38,19 @@ function getOption(value, def) {
 function getOptions() {
   var options = localStorage["options"];
   try {
-    if (!options) {
-      options = {}; options[NAME_DEF] = getOptionsDefault();
-    } else {
+    if (options !== undefined) {
       options = JSON.parse(options);
     }
   } catch (e) {
-    alert("Unable to parse options from localStorage: "+e);
-    options = {}; options[NAME_DEF] = getOptionsDefault();
+    alert("Unable to parse options from localStorage: " + e);
+    options = undefined;
   }
+  if (!options) {
+    options = {};
+    options[NAME_DEF] = getOptionsDefault();
+    setOptions(options);
+    setName(NAME_DEF);
+  }
+
   return options;
 }

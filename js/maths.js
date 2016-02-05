@@ -6,13 +6,35 @@ OPERATION_TABLE = {
   "multiplication" : "×",
   "division" : "÷"
 }
-function setOperation(oper) {
+
+function getSymbol(oper) {
   var sym=OPERATION_TABLE[oper];
   if (!sym) {
       set_alert("alert", "error", "using addition for unknown operation="+oper);
       sym = OPERATION_TABLE["addition"];
   }
-  $("#operation").text(sym);
+  return sym;
+}
+function setOperation(oper) {
+  $("#operation").text(getSymbol(oper));
+}
+
+function getRandom(min, max) {
+  //var random_number = Math.round(Math.random()*(upper_bound - lower_bound) + lower_bound);
+  return Math.round(Math.random()*(max-min)+min);
+}
+
+function getNumbers(oper) {
+  var sym = getSymbol(oper);
+  var name = getOption("name");
+  var options = getOptions();
+  var option = options[name];
+  var left = getRandom(0,option.left_max);
+  var right = getRandom(0, option.right_max);
+  return {
+    left: left,
+    right: right
+  }
 }
 
 function createStars(div) {
