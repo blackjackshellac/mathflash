@@ -33,17 +33,24 @@ function init_controls() {
       if (statusTxt == "success") {
         set_alert("alert", statusTxt, content + " loaded successfully!");
         localStorage.setItem("operation", oper);
-        setOperation(oper);
+        var sym = setOperation(oper);
 
-        var nums = getNumbers(oper);
+        setNumbers(sym);
 
-        $("#left_val").text(nums.left);
-        $("#right_val").text(nums.right);
+        createStars();
+        createProgress();
 
-        var cdiv = $("#content");
-        createStars(cdiv);
-        createProgress(cdiv);
+        resetResponseCounter();
 
+        $("#go").click(function(e) {
+          goClick();
+        });
+        $('#answer').keypress(function(e) {
+                if (e.keyCode == 13) {
+                    goClick();
+                    return false; // prevent the button click from happening
+                }
+        });
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }
