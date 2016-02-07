@@ -54,3 +54,13 @@ function getOptions() {
 
   return options;
 }
+
+function getIntegerOption(key) {
+  var name = getOption("name", NAME_DEF);
+  var options = getOptions();
+  opts = options[name];
+  if (!opts) {
+    opts = getOptionsDefault();
+  }
+  return parseInt(opts[key]);
+}
