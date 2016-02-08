@@ -10,16 +10,24 @@ function init_controls() {
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
         set_alert("alert", statusTxt, content + " loaded successfully!");
-        var options = getOptions();
-        var name = getOption("name", NAME_DEF);
-        var option = options[name];
-        if (!option) {
-          set_alert("alert", "warning", "using defaults for name="+name);
-          option = getOptionsDefault();
-          setOptions(options);
-          setName(NAME_DEF);
-        }
-        setOptionsControls(name, option);
+        var options = loadOptions();
+        var name = loadName();
+        setOptionsControls(name);
+
+        $("#options_defaults,#options_save").click(function(e) {
+          var id = e.target.id;
+          if (id == "options_defaults") {
+            goOptionsDefaults();
+          } else if (id == "options_save") {
+            goOptionsSave();
+          }
+        });
+        $('ul.dropdown-menu li a').click(function (e) {
+          var id = e.target.id;
+          var name = $("#"+id).text().toLowerCase();
+          setOptionsControls(name);
+          e.preventDefault();
+        });
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }
@@ -31,7 +39,7 @@ function init_controls() {
     var content = "content/maths.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
-        set_alert("alert", statusTxt, content + " loaded successfully!");
+        set_alert("alert", statusTxt, oper + " loaded successfully!");
         localStorage.setItem("operation", oper);
         var sym = setOperation(oper);
 
@@ -51,6 +59,7 @@ function init_controls() {
                     return false; // prevent the button click from happening
                 }
         });
+        $('#answer').focus();
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }

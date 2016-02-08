@@ -7,15 +7,39 @@ body {
 	text-align: center;
 }
 
+td.bottom {
+	border-bottom: 5px solid black;
+}
+
+td.highlight {
+
+}
+
+td.number {
+	background-color: #c0c0c0;
+}
+
+td.mathright {
+	text-align: center;
+	padding: 10px;
+}
+
+td.mathleft {
+	width: 50%;
+	padding: 10px;
+}
+
 td.math {
 	vertical-align: middle;
 	text-align: right;
-	border: 1px solid black;
-	font-size: 32px;
+	border: none solid black;
+	/*
+	font-size: 24px;
 	font-family: monospace;
-	padding: 10px;
 	align-content: center;
+	*/
 }
+
 table.math {
 	width: 50%;
 	border: none solid black;
@@ -28,21 +52,37 @@ td.stars {
 	text-align: center;
 	padding: 2px;
 	border: none solid grey;
+	/*
+	font-size: 24px;
+	font-family: monospace;
+	*/
+}
+
+.mathtext {
+	font-size: 24px;
+	font-family: monospace;
 }
 
 input[type=text].math {
 	vertical-align: middle;
 	text-align: right;
-	font-size: 32px;
+	/*
+	font-size: 24px;
 	font-family: monospace;
-	width: 100px;
+	*/
+	width: 100%;
 }
+
 button.math {
 	vertical-align: middle;
-	text-align: right;
-	font-size: 32px;
+	text-align: center;
+	/*
+	font-size: 24px;
 	font-family: monospace;
+	*/
+	width: 80%;
 }
+
 .borderless {
 	border:none;
 }

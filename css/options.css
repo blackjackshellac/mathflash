@@ -1,0 +1,16 @@
+table.options {
+  width: 60%;
+}
+td.option-label {
+  text-align: right;
+  padding: 5px;
+}
+td.option-input {
+  text-align: right;
+  padding: 5px;
+}
+
+.option-text {
+	font-size: 18px;
+	font-family: monospace;
+}

@@ -37,7 +37,7 @@ function setProgress() {
   var pc = Math.floor(g_number_cur * 100 / g_number_max);
   var pcc = Math.floor(g_number_correct * 100 / g_number_cur);
   var width = "width: " + pc + "%";
-  var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max="+g_number_max+")";
+  var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_number_max + ")";
   $("#progress-number").attr('aria-valuenow', g_number_cur).attr('aria-valuemax', g_number_max).attr('style', width).html(text);
 }
 
@@ -50,9 +50,7 @@ function setNumbers(sym) {
 }
 
 function getNumbers(sym) {
-  var name = getOption("name");
-  var options = getOptions();
-  var option = options[name];
+  var option = g_options[g_name];
 
   var left = getRandom(0, option.left_max);
   var right = getRandom(0, option.right_max);
@@ -137,19 +135,16 @@ function goClick() {
   var right = parseInt($("#right_val").text());
   var sym = $("#operation").text();
 
-  var correct = false;
-  if (sym == '+') {
-    correct = doAddition(left, right, answer);
-  } else if (sym == '-') {
-    correct = doSubtraction(left, right, answer);
-  } else if (sym == '×') {
-    correct = doMultiplication(left, right, answer);
-  } else if (sym == '÷') {
-    correct = doDivision(left, right, answer);
-  }
+  var res = doOperation(sym, left, right);
+  var correct = res == answer;
   setStar(correct);
   setProgress();
   setNumbers(sym);
+  var text_result = "";
+  if (!correct) {
+    text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+  }
+  $("#result").text(text_result);
 }
 
 function clearStars(little) {
@@ -171,15 +166,15 @@ function setStar(correct) {
   var star = "images/star1";
   var count = incCounters(correct);
 
-  var n = (count % 10);
-  n = n == 0 ? 9 : n - 1;
-  var m = Math.floor(count / 10) * 10;
+  var m = (count % 10);
+  var n = m == 0 ? 9 : m - 1;
 
   var id = "#star" + n;
-  if (n == 0 && m > 0) {
-    id = "#star" + m;
+  if (n == 9 && m == 0) {
+    id = "#star" + (count / 10) * 10;
     star = "images/star10.gif";
     $(id).attr('src', star);
+  } else if (n == 0 && m == 1) {
     clearStars(true);
   }
   id = "#star" + n;
@@ -189,24 +184,12 @@ function setStar(correct) {
   $("#checkmark").attr('src', check);
 }
 
-function doAddition(left, right, answer) {
-  var result = left + right;
-  return answer == result;
-}
-
-function doSubtraction(left, right, answer) {
-  var result = left - right;
-  return answer == result;
-}
-
-function doMultiplication(left, right, answer) {
-  var result = left * right;
-  return answer == result;
-}
-
-function doDivision(left, right, answer) {
-  var result = left / right;
-  return answer == result;
+function doOperation(sym, left, right) {
+  if (sym == '+') return left+right;
+  if (sym == '-') return left-right;
+  if (sym == '×') return left*right;
+  if (sym == '÷') return left/right;
+  throw "Unknown operation symbol: "+sym
 }
 
 function resetResponseCounter() {
