@@ -28,6 +28,9 @@ function init_controls() {
           setOptionsControls(name);
           e.preventDefault();
         });
+        var lis = $('ul.dropdown-menu li').length;
+        console.log("num li = "+lis);
+        fillNamesMenu($('ul.dropdown-menu'));
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }

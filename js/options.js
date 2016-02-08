@@ -1,6 +1,3 @@
-var g_options = initializeOptions();
-var g_name = NAME_DEF;
-
 var LEFT_MAX = "10";
 var RIGHT_MAX = "10";
 var NUMBER_MAX = "50";
@@ -12,6 +9,9 @@ var OPTION_DEF = {
   number_max: NUMBER_MAX,
   timeout_max: TIMEOUT_MAX
 };
+
+var g_options = initializeOptions();
+var g_name = NAME_DEF;
 
 function initializeOptions() {
   var options = {};
@@ -37,7 +37,7 @@ function setOptionsControls(name) {
 }
 
 function getOptionsControls() {
-  var options = initializeOptions();
+  var options = {};
   options.left_max = $("#left_max").val();
   options.right_max = $("#right_max").val();
   options.number_max = $("#number_max").val();
@@ -60,8 +60,9 @@ function saveName(name) {
   g_name = name;
 }
 
-function saveOptions(options) {
-  localStorage["options"] = JSON.stringify(options);
+function saveOptions() {
+  localStorage["options"] = JSON.stringify(g_options);
+  return g_options;
 }
 
 function getOption(value, def) {
@@ -72,7 +73,7 @@ function getOption(value, def) {
 function loadOptions() {
   var options = localStorage["options"];
   try {
-    if (options) {
+    if (options != undefined) {
       options = JSON.parse(options);
     }
   } catch (e) {
@@ -80,8 +81,7 @@ function loadOptions() {
     options = undefined;
   }
   if (!options) {
-    options = initializeOptions();
-    saveOptions(options);
+    options = saveOptions();
     saveName(NAME_DEF);
   }
 
@@ -116,7 +116,20 @@ function goOptionsSave() {
     return;
   }
   saveName(name);
-  var options = getOptionsControls();
-  saveOptions(options);
+  g_options[name] = getOptionsControls();
+  saveOptions();
   set_alert("alert", "success", "Saved options for name="+name);
+}
+
+function fillNamesMenu(sul) {
+  // <li><a id="name-list-0" href="#">default</a></li>
+  var names = Object.keys(g_options);
+  sul.empty();
+  for (var i = 0; i < names.length; i++) {
+    var id='name-list-'+i;
+    var li=$('<li></li>')
+    var a = $('<a></a>').attr('id', id).attr('href', '#').text(names[i]);
+    li.append(a);
+    sul.append(li);
+  }
 }
