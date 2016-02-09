@@ -9,6 +9,8 @@ function init_controls() {
     var content = "content/" + div + ".html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
+        $('.dropdown-toggle').dropdown();
+
         set_alert("alert", statusTxt, content + " loaded successfully!");
         var options = loadOptions();
         var name = loadName();
@@ -22,15 +24,15 @@ function init_controls() {
             goOptionsSave();
           }
         });
+
+        // fill the menu before setting the click events
+        fillNamesMenu($('ul.dropdown-menu'));
         $('ul.dropdown-menu li a').click(function (e) {
           var id = e.target.id;
           var name = $("#"+id).text().toLowerCase();
           setOptionsControls(name);
           e.preventDefault();
         });
-        var lis = $('ul.dropdown-menu li').length;
-        console.log("num li = "+lis);
-        fillNamesMenu($('ul.dropdown-menu'));
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }
