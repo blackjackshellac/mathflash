@@ -118,10 +118,13 @@ function goOptionsSave() {
   saveName(name);
   g_options[name] = getOptionsControls();
   saveOptions();
+  fillNamesMenu();
+
   set_alert("alert", "success", "Saved options for name="+name);
 }
 
-function fillNamesMenu(sul) {
+function fillNamesMenu() {
+  var sul = $('ul#name_list.dropdown-menu');
   // <li><a id="name-list-0" href="#">default</a></li>
   var names = Object.keys(g_options);
   sul.empty();
@@ -132,4 +135,10 @@ function fillNamesMenu(sul) {
     li.append(a);
     sul.append(li);
   }
+  $('ul#name_list.dropdown-menu li a').click(function (e) {
+    var id = e.target.id;
+    var name = $("#"+id).text().toLowerCase();
+    setOptionsControls(name);
+    e.preventDefault();
+  });
 }

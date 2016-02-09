@@ -42,6 +42,19 @@
           <li><a id="multiplication" href="#">Multiplication</a></li>
           <li><a id="division" href="#">Division</a></li>
         </ul>
+        <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Menu <span class="caret"></span></a>
+          <ul id="nav_menu" class="dropdown-menu">
+            <li><a id="save_options" href="#">Save options ...</a></li>
+            <li><a id="load_options" href="#">Load options ...</a></li>
+            <!--
+            <li role="separator" class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          -->
+          </ul>
+        </li>
+      </ul>
       </div>
       <!--/.nav-collapse -->
     </div>
@@ -63,6 +76,7 @@
     <!-- well -->
 
   </div>
+  <input type="file" id="file-thing">
   <!-- /.container -->
 
   <!-- Bootstrap core JavaScript
@@ -78,6 +92,20 @@
       console.log("document loaded");
       init_controls();
       $('#options').click();
+      $('#file-thing').hide();
+
+      // http://www.html5rocks.com/en/tutorials/file/filesystem/
+      $('ul#nav_menu li a').click(function(e) {
+        var id=e.target.id;
+        if (id == "save_options") {
+          $("#file-thing").click();
+        } else if (id == "load_options") {
+          $("#file-thing").click();
+        } else {
+          set_alert("alert", "error", "Unknown menu id")
+        }
+
+      });
     });
 
     $(window).load(function() {
@@ -88,6 +116,8 @@
   <script src="js/maths.js"></script>
   <script src="js/controls.js"></script>
   <script src="js/utils.js"></script>
+  <!-- http://mozilla.github.io/localForage/ -->
+  <script src="js/localforage.js"></script>
 </body>
 
 </html>

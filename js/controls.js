@@ -9,8 +9,6 @@ function init_controls() {
     var content = "content/" + div + ".html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
-        $('.dropdown-toggle').dropdown();
-
         set_alert("alert", statusTxt, content + " loaded successfully!");
         var options = loadOptions();
         var name = loadName();
@@ -26,13 +24,7 @@ function init_controls() {
         });
 
         // fill the menu before setting the click events
-        fillNamesMenu($('ul.dropdown-menu'));
-        $('ul.dropdown-menu li a').click(function (e) {
-          var id = e.target.id;
-          var name = $("#"+id).text().toLowerCase();
-          setOptionsControls(name);
-          e.preventDefault();
-        });
+        fillNamesMenu();
       } else if (statusTxt == "error") {
         set_alert("alert", statusTxt, "Error: " + xhr.status + ": " + xhr.statusText);
       }
@@ -48,12 +40,10 @@ function init_controls() {
         localStorage.setItem("operation", oper);
         var sym = setOperation(oper);
 
-        setNumbers(sym);
-
         createStars();
         createProgress();
-
         resetResponseCounter();
+        setNumbers(sym);
 
         $("#go").click(function(e) {
           goClick();

@@ -7,6 +7,8 @@ var OPERATION_TABLE = {
   "division": "÷"
 }
 
+var g_done = false;
+var g_incorrect = [];
 var g_number_max = 0;
 var g_number_cur = 0;
 var g_number_correct = 0;
@@ -44,14 +46,20 @@ function setProgress() {
 function setNumbers(sym) {
   var nums = getNumbers(sym);
 
-  $("#left_val").text(nums.left);
-  $("#right_val").text(nums.right);
+  $("#left_val").text(nums[0]);
+  $("#right_val").text(nums[1]);
   $("#answer").val("");
 }
 
 function getNumbers(sym) {
   var option = g_options[g_name];
 
+  if (g_number_cur == g_number_max) {
+    if (g_incorrect.length > 0) {
+      return g_incorrect.pop();
+    }
+    g_done = true;
+  }
   var left = getRandom(0, option.left_max);
   var right = getRandom(0, option.right_max);
 
@@ -64,10 +72,7 @@ function getNumbers(sym) {
     var res = left + right;
     left = res;
   }
-  return {
-    left: left,
-    right: right
-  }
+  return [ left, right ];
 }
 
 function createStars() {
@@ -119,32 +124,66 @@ function createProgress(div) {
   div.append(tprogress);
 }
 
+function getInt(sval) {
+  var ival = parseInt(sval.trim());
+  if (isNaN(ival)) {
+    throw("Value is not an integer: "+sval);
+  }
+  return ival;
+}
+function getIntVal(sid) {
+  return getInt($(sid).val());
+}
+
+function getIntText(sid) {
+  return getInt($(sid).text());
+}
+
 function goClick() {
-  var answer = $("#answer").val().trim();
-  if (answer == "") {
+  var answer, left, right, sym;
+  if (g_done) {
+    $("#go").text("Go!");
+    resetResponseCounter();
+    clearStars(true);
+    clearStars(false);
+    setProgress();
     return;
   }
   if (g_number_cur == g_number_max) {
-    var pc = Math.floor(g_number_correct / g_number_cur * 100);
-    var check = pc > 60 ? "images/star10correct.gif" : "images/stop10wrong.gif";
-    $("#checkmark").attr('src', check);
+    $("#go").text("Retry!");
+  }
+  try {
+    set_alert("alert", "success", "");
+    answer = getIntVal("#answer");
+    left = getIntText("#left_val");
+    right = getIntText("#right_val");
+    sym = $("#operation").text();
+  } catch(e) {
+    set_alert("alert", "error", e);
+    $("#answer").val("");
     return;
   }
-  answer = parseInt(answer);
-  var left = parseInt($("#left_val").text());
-  var right = parseInt($("#right_val").text());
-  var sym = $("#operation").text();
 
   var res = doOperation(sym, left, right);
   var correct = res == answer;
-  setStar(correct);
-  setProgress();
-  setNumbers(sym);
   var text_result = "";
   if (!correct) {
     text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+    $("#result").css('color', 'darkred');
+    g_incorrect.push([ left, right]);
   }
   $("#result").text(text_result);
+
+  setStar(correct);
+  setProgress();
+  setNumbers(sym);
+  if (g_done) {
+    var pc = Math.floor(g_number_correct / g_number_cur * 100);
+    var check = pc > 60 ? "images/star10correct.gif" : "images/stop10wrong.gif";
+    $("#checkmark").attr('src', check);
+    $("#answer").attr('disabled', 'disabled');
+    $("#go").text("Restart!");
+  }
 }
 
 function clearStars(little) {
@@ -157,30 +196,37 @@ function clearStars(little) {
   } else {
     for (var i = 10; i <= 50; i += 10) {
       var id = "#star" + i;
-      $(id).attr('src', 'images/start10empty.gif');
+      $(id).attr('src', 'images/star10empty.gif');
     }
   }
 }
 
 function setStar(correct) {
-  var star = "images/star1";
+  var check;
+  var star_id;
+  var star;
   var count = incCounters(correct);
 
   var m = (count % 10);
   var n = m == 0 ? 9 : m - 1;
 
-  var id = "#star" + n;
   if (n == 9 && m == 0) {
-    id = "#star" + (count / 10) * 10;
+    star_id = "#star" + (count / 10) * 10;
     star = "images/star10.gif";
-    $(id).attr('src', star);
+    $(star_id).attr('src', star);
   } else if (n == 0 && m == 1) {
     clearStars(true);
   }
-  id = "#star" + n;
-  star = correct ? "images/star1.gif" : "images/star1red.png";
-  $(id).attr('src', star);
-  var check = correct ? "images/check_green.png" : "images/check_red.png";
+
+  star_id = "#star" + n;
+  if (correct) {
+    star = "images/star1.gif";
+    check = "images/check_green.png";
+  } else {
+    star = "images/star1red.png";
+    check = "images/check_red.png";
+  }
+  $(star_id).attr('src', star);
   $("#checkmark").attr('src', check);
 }
 
@@ -193,18 +239,21 @@ function doOperation(sym, left, right) {
 }
 
 function resetResponseCounter() {
+  g_done = false;
+  g_incorrect = [];
   g_number_cur = 0;
   g_number_correct = 0;
   g_number_max = getIntegerOption("number_max");
+  $("#answer").removeAttr('disabled');
 }
 
 function incCounters(correct) {
+  if (g_number_cur == g_number_max) {
+    return g_number_cur;
+  }
   g_number_cur++;
   if (correct) {
     g_number_correct++;
-  }
-  if (g_number_cur > g_number_max) {
-    g_number_max = g_number_cur;
   }
   return g_number_cur;
 }
