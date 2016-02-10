@@ -3,84 +3,14 @@ body {
 	padding-left: 50px;
 	padding-right: 50px;
 }
+.flash-icon {
+	vertical-align: center;
+	display: inline;
+	max-width: 100%;
+  max-height: 100%;
+}
 .big_title {
 	text-align: center;
-}
-
-td.bottom {
-	border-bottom: 5px solid black;
-}
-
-td.highlight {
-
-}
-
-td.number {
-	background-color: #c0c0c0;
-}
-
-td.mathright {
-	text-align: center;
-	padding: 10px;
-}
-
-td.mathleft {
-	width: 50%;
-	padding: 10px;
-}
-
-td.math {
-	vertical-align: middle;
-	text-align: right;
-	border: none solid black;
-	/*
-	font-size: 24px;
-	font-family: monospace;
-	align-content: center;
-	*/
-}
-
-table.math {
-	width: 50%;
-	border: none solid black;
-	padding: 5px;
-}
-table.table {
-	border: none;
-}
-td.stars {
-	text-align: center;
-	padding: 2px;
-	border: none solid grey;
-	/*
-	font-size: 24px;
-	font-family: monospace;
-	*/
-}
-
-.mathtext {
-	font-size: 24px;
-	font-family: monospace;
-}
-
-input[type=text].math {
-	vertical-align: middle;
-	text-align: right;
-	/*
-	font-size: 24px;
-	font-family: monospace;
-	*/
-	width: 100%;
-}
-
-button.math {
-	vertical-align: middle;
-	text-align: center;
-	/*
-	font-size: 24px;
-	font-family: monospace;
-	*/
-	width: 80%;
 }
 
 .borderless {

@@ -1,5 +1,10 @@
 // +-÷×
 
+var HAPPY_CHECK = "images/supermario/Yoshi_Star_Icon_96.png";
+var SAD_CHECK = "images/supermario/Yoshi_Icon_96.png";
+var RIGHT_CHECK = "images/supermario/Mushroom_1UP_Icon_96.png";
+var WRONG_CHECK = "images/supermario/Mushroom_Life_Icon_96.png"
+
 var OPERATION_TABLE = {
   "addition": "+",
   "subtraction": "-",
@@ -56,6 +61,7 @@ function getNumbers(sym) {
 
   if (g_number_cur == g_number_max) {
     if (g_incorrect.length > 0) {
+      $("#go").text("Retry!");
       return g_incorrect.pop();
     }
     g_done = true;
@@ -142,16 +148,13 @@ function getIntText(sid) {
 function goClick() {
   var answer, left, right, sym;
   if (g_done) {
-    $("#go").text("Go!");
     resetResponseCounter();
     clearStars(true);
     clearStars(false);
     setProgress();
     return;
   }
-  if (g_number_cur == g_number_max) {
-    $("#go").text("Retry!");
-  }
+
   try {
     set_alert("alert", "success", "");
     answer = getIntVal("#answer");
@@ -179,10 +182,10 @@ function goClick() {
   setNumbers(sym);
   if (g_done) {
     var pc = Math.floor(g_number_correct / g_number_cur * 100);
-    var check = pc > 60 ? "images/star10correct.gif" : "images/stop10wrong.gif";
+    var check = pc > 60 ? HAPPY_CHECK : SAD_CHECK;
     $("#checkmark").attr('src', check);
     $("#answer").attr('disabled', 'disabled');
-    $("#go").text("Restart!");
+    $("#go").text("Restart!").focus();
   }
 }
 
@@ -221,10 +224,10 @@ function setStar(correct) {
   star_id = "#star" + n;
   if (correct) {
     star = "images/star1.gif";
-    check = "images/check_green.png";
+    check = RIGHT_CHECK;
   } else {
     star = "images/star1red.png";
-    check = "images/check_red.png";
+    check = WRONG_CHECK;
   }
   $(star_id).attr('src', star);
   $("#checkmark").attr('src', check);
@@ -244,7 +247,9 @@ function resetResponseCounter() {
   g_number_cur = 0;
   g_number_correct = 0;
   g_number_max = getIntegerOption("number_max");
-  $("#answer").removeAttr('disabled');
+  $("#answer").removeAttr('disabled').focus();
+  $("#checkmark").attr('src', HAPPY_CHECK);
+  $("#go").text("Go!");
 }
 
 function incCounters(correct) {
