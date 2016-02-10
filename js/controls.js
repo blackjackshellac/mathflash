@@ -42,6 +42,7 @@ function init_controls() {
 
         createStars();
         createProgress();
+        createTimeoutProgress();
         resetResponseCounter();
         setNumbers(sym);
 

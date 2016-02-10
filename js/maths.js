@@ -17,6 +17,10 @@ var g_incorrect = [];
 var g_number_max = 0;
 var g_number_cur = 0;
 var g_number_correct = 0;
+var g_timeout = 0;
+var g_timeout_id = undefined;
+var g_timeout_cur = 0;
+var G_TIMEOUT_INC = 500;
 
 function getSymbol(oper) {
   var sym = OPERATION_TABLE[oper];
@@ -46,6 +50,25 @@ function setProgress() {
   var width = "width: " + pc + "%";
   var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_number_max + ")";
   $("#progress-number").attr('aria-valuenow', g_number_cur).attr('aria-valuemax', g_number_max).attr('style', width).html(text);
+}
+
+function setTimeoutProgress() {
+  if (g_timeout_cur > g_timeout) {
+    g_timeout_cur = g_timeout;
+  }
+  var pc = Math.floor(g_timeout_cur * 100 / g_timeout);
+  var width = "width: " + pc + "%";
+  //var text = String.format("{0} of {1} seconds", g_timeout_cur, g_timeout);
+  $("#timeout-progress").attr('aria-valuenow', g_timeout_cur).attr('aria-valuemax', g_timeout).attr('style', width); //.html(text);
+}
+
+function clearTimeoutProgress() {
+  if (g_timeout_id != undefined) {
+    clearInterval(g_timeout_id);
+    g_timeout_id = undefined;
+  }
+  g_timeout_cur = 0;
+  setTimeoutProgress();
 }
 
 function setNumbers(sym) {
@@ -78,7 +101,22 @@ function getNumbers(sym) {
     var res = left + right;
     left = res;
   }
-  return [ left, right ];
+
+  g_timeout_id = undefined;
+  if (g_timeout > 0) {
+    g_timeout_id = setInterval(function() {
+      g_timeout_cur += G_TIMEOUT_INC;
+      if (g_timeout_cur <= g_timeout) {
+        setTimeoutProgress();
+      } else {
+        set_alert("alert", "error", "Doh! Too slow!");
+        clearTimeoutProgress();
+        $("#answer").val("0");
+        goClick();
+      }
+    }, G_TIMEOUT_INC);
+  }
+  return [left, right];
 }
 
 function createStars() {
@@ -108,7 +146,7 @@ function createStars() {
   div.append(tstars);
 }
 
-function createProgress(div) {
+function createProgress() {
   var div = $("#content");
   div.append("<br>");
   var tprogress = $("<table></table>").addClass("math");
@@ -130,13 +168,39 @@ function createProgress(div) {
   div.append(tprogress);
 }
 
+function createTimeoutProgress() {
+  if (g_timeout == 0) {
+    return;
+  }
+  var div = $("#content");
+  div.append("<br>");
+  var tprogress = $("<table></table>").addClass("math");
+  var ptr = $('<tr></tr>');
+  var ptd = $('<td></td>');
+
+  var dp = $('<div></div>').addClass("progress");
+  var dpp = $('<div></div>');
+
+  //<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+  dpp.addClass("progress-bar progress-bar-success");
+  dpp.attr('id', "timeout-progress").attr('role', "progressbar").attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_timeout);
+
+  dp.append(dpp);
+  ptd.append(dp);
+  ptr.append(ptd);
+  tprogress.append(ptr);
+
+  div.append(tprogress);
+}
+
 function getInt(sval) {
   var ival = parseInt(sval.trim());
   if (isNaN(ival)) {
-    throw("Value is not an integer: "+sval);
+    throw ("Value is not an integer: " + sval);
   }
   return ival;
 }
+
 function getIntVal(sid) {
   return getInt($(sid).val());
 }
@@ -147,6 +211,7 @@ function getIntText(sid) {
 
 function goClick() {
   var answer, left, right, sym;
+
   if (g_done) {
     resetResponseCounter();
     clearStars(true);
@@ -156,12 +221,11 @@ function goClick() {
   }
 
   try {
-    set_alert("alert", "success", "");
     answer = getIntVal("#answer");
     left = getIntText("#left_val");
     right = getIntText("#right_val");
     sym = $("#operation").text();
-  } catch(e) {
+  } catch (e) {
     set_alert("alert", "error", e);
     $("#answer").val("");
     return;
@@ -173,7 +237,7 @@ function goClick() {
   if (!correct) {
     text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
     $("#result").css('color', 'darkred');
-    g_incorrect.push([ left, right]);
+    g_incorrect.push([left, right]);
   }
   $("#result").text(text_result);
 
@@ -234,11 +298,11 @@ function setStar(correct) {
 }
 
 function doOperation(sym, left, right) {
-  if (sym == '+') return left+right;
-  if (sym == '-') return left-right;
-  if (sym == '×') return left*right;
-  if (sym == '÷') return left/right;
-  throw "Unknown operation symbol: "+sym
+  if (sym == '+') return left + right;
+  if (sym == '-') return left - right;
+  if (sym == '×') return left * right;
+  if (sym == '÷') return left / right;
+  throw "Unknown operation symbol: " + sym
 }
 
 function resetResponseCounter() {
@@ -250,6 +314,9 @@ function resetResponseCounter() {
   $("#answer").removeAttr('disabled').focus();
   $("#checkmark").attr('src', HAPPY_CHECK);
   $("#go").text("Go!");
+
+  g_timeout = getIntegerOption("timeout_max") * 2000;
+  g_timeout_cur = 0;
 }
 
 function incCounters(correct) {
