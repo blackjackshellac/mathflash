@@ -173,7 +173,7 @@ function createTimeoutProgress() {
     return;
   }
   var div = $("#content");
-  div.append("<br>");
+  //div.append("<br>");
   var tprogress = $("<table></table>").addClass("math");
   var ptr = $('<tr></tr>');
   var ptd = $('<td></td>');
@@ -219,6 +219,9 @@ function goClick() {
     setProgress();
     return;
   }
+  if (g_timeout_id != undefined) {
+    clearTimeoutProgress();
+  }
 
   try {
     answer = getIntVal("#answer");
@@ -250,6 +253,7 @@ function goClick() {
     $("#checkmark").attr('src', check);
     $("#answer").attr('disabled', 'disabled');
     $("#go").text("Restart!").focus();
+    clearTimeoutProgress();
   }
 }
 

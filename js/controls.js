@@ -13,6 +13,7 @@ function init_controls() {
         var options = loadOptions();
         var name = loadName();
         setOptionsControls(name);
+        clearTimeoutProgress();
 
         $("#options_defaults,#options_save").click(function(e) {
           var id = e.target.id;
@@ -40,6 +41,7 @@ function init_controls() {
         localStorage.setItem("operation", oper);
         var sym = setOperation(oper);
 
+        clearTimeoutProgress();
         createStars();
         createProgress();
         createTimeoutProgress();
