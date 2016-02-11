@@ -10,7 +10,8 @@ body {
   max-height: 100%;
 }
 .big_title {
-	text-align: center;
+	text-align: left;
+	font-size: 36px;
 }
 
 .borderless {

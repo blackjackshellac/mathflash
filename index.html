@@ -46,18 +46,18 @@
           <li><a id="division" href="#">Division</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Menu <span class="caret"></span></a>
-          <ul id="nav_menu" class="dropdown-menu">
-            <li><a id="save_options" href="#">Save options ...</a></li>
-            <li><a id="load_options" href="#">Load options ...</a></li>
-            <!--
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Menu <span class="caret"></span></a>
+            <ul id="nav_menu" class="dropdown-menu">
+              <li><a id="save_options" href="#">Save options ...</a></li>
+              <li><a id="load_options" href="#">Load options ...</a></li>
+              <!--
             <li role="separator" class="divider"></li>
             <li><a href="#">Separated link</a></li>
           -->
-          </ul>
-        </li>
-      </ul>
+            </ul>
+          </li>
+        </ul>
       </div>
       <!--/.nav-collapse -->
     </div>
@@ -65,8 +65,11 @@
 
   <div class="container">
 
-    <div class=".big_title">
-      <h1 id="h1_action"></h1>
+    <div class="big_title">
+      <h1 id="h1_action" style="display: inline-block;"></h1>
+      <span id="span-download" style="display: none">
+        - <a id="json-download" download="mathflash_options.json" >download</a>
+      </span>
     </div>
 
     <div class="well" id='content'>
@@ -80,6 +83,7 @@
 
   </div>
   <input type="file" id="file-thing">
+
   <!-- /.container -->
 
   <!-- Bootstrap core JavaScript
@@ -97,11 +101,18 @@
       $('#options').click();
       $('#file-thing').hide();
 
+      $('#json-download').click(function(e) {
+        $('#span-download').hide();
+        //e.preventDefault();
+      });
+
       // http://www.html5rocks.com/en/tutorials/file/filesystem/
       $('ul#nav_menu li a').click(function(e) {
-        var id=e.target.id;
+        var id = e.target.id;
         if (id == "save_options") {
-          $("#file-thing").click();
+          var jsonFile = makeJsonFile();
+          $('#json-download').attr('href', jsonFile);
+          $('#span-download').show();
         } else if (id == "load_options") {
           $("#file-thing").click();
         } else {
@@ -109,6 +120,7 @@
         }
 
       });
+
     });
 
     $(window).load(function() {

@@ -13,6 +13,24 @@ var OPTION_DEF = {
 var g_options = initializeOptions();
 var g_name = NAME_DEF;
 
+var g_jsonFile = null;
+
+function makeJsonFile() {
+  var data = {};
+  data["options"] = loadOptions();
+  data["name"] = loadName();
+  var json = JSON.stringify(data, null, 4);
+
+  if (g_jsonFile !== null) {
+    window.URL.revokeObjectURL(g_jsonFile);
+  }
+  var blob = new Blob([json], {
+    type: 'application/json'
+  });
+  g_jsonFile = window.URL.createObjectURL(blob);
+  return g_jsonFile;
+}
+
 function initializeOptions() {
   var options = {};
   var option = OPTION_DEF;
@@ -25,7 +43,7 @@ function setOptionsControls(name) {
   if (!option) {
     g_name = NAME_DEF;
     option = OPTION_DEF;
-    set_alert("alert", "error", "options not found for name: "+name);
+    set_alert("alert", "error", "options not found for name: " + name);
   } else {
     g_name = name;
   }
@@ -106,7 +124,7 @@ function goOptionsDefaults() {
   saveName(name);
   saveOptions(options);
   setOptionsControls(name, options);
-  set_alert("alert", "success", "using defaults for name="+name);
+  set_alert("alert", "success", "using defaults for name=" + name);
 }
 
 function goOptionsSave() {
@@ -120,7 +138,7 @@ function goOptionsSave() {
   saveOptions();
   fillNamesMenu();
 
-  set_alert("alert", "success", "Saved options for name="+name);
+  set_alert("alert", "success", "Saved options for name=" + name);
 }
 
 function fillNamesMenu() {
@@ -129,15 +147,15 @@ function fillNamesMenu() {
   var names = Object.keys(g_options);
   sul.empty();
   for (var i = 0; i < names.length; i++) {
-    var id='name-list-'+i;
-    var li=$('<li></li>')
+    var id = 'name-list-' + i;
+    var li = $('<li></li>')
     var a = $('<a></a>').attr('id', id).attr('href', '#').text(names[i]);
     li.append(a);
     sul.append(li);
   }
-  $('ul#name_list.dropdown-menu li a').click(function (e) {
+  $('ul#name_list.dropdown-menu li a').click(function(e) {
     var id = e.target.id;
-    var name = $("#"+id).text().toLowerCase();
+    var name = $("#" + id).text().toLowerCase();
     setOptionsControls(name);
     e.preventDefault();
   });
