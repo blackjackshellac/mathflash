@@ -237,7 +237,10 @@ function goClick() {
   var res = doOperation(sym, left, right);
   var correct = res == answer;
   var text_result = "";
-  if (!correct) {
+  if (correct) {
+    $("#info").text(String.format("Yes! {0} {1} {2} = {3}", left, sym, right, answer));
+  } else {
+    $("#info").text(String.format("D'oh! {0} {1} {2} ≠ {3}", left, sym, right, answer));
     text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
     $("#result").css('color', 'darkred');
     g_incorrect.push([left, right]);
