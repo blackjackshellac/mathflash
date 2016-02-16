@@ -1,0 +1,7 @@
+
+* save results by name (time to completion, number answered, number correct, date)
+* graph results
+* retesting heuristics -- save incorrect answers to weigh more heavily when selecting numbers
+* sample numbers closer to maximums more frequently (https://forums.tigsource.com/index.php?topic=13247.0)
+* switch to using IndexedDB
+* add php module with SQL for saving results on server

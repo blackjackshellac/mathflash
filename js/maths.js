@@ -236,9 +236,13 @@ function goClick() {
 
   var res = doOperation(sym, left, right);
   var correct = res == answer;
-  var text_result = "";
-  if (!correct) {
-    text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+  var text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+  if (correct) {
+    //$("#info").text(String.format("{0} {1} {2} = {3}", left, sym, right, answer));
+    $("#info").text("");
+    $("#result").css('color', 'darkgreen');
+  } else {
+    $("#info").text(String.format("{0} {1} {2} ≠ {3}", left, sym, right, answer));
     $("#result").css('color', 'darkred');
     g_incorrect.push([left, right]);
   }
