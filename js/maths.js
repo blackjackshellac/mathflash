@@ -236,12 +236,13 @@ function goClick() {
 
   var res = doOperation(sym, left, right);
   var correct = res == answer;
-  var text_result = "";
+  var text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
   if (correct) {
-    $("#info").text(String.format("Yes! {0} {1} {2} = {3}", left, sym, right, answer));
+    //$("#info").text(String.format("{0} {1} {2} = {3}", left, sym, right, answer));
+    $("#info").text("");
+    $("#result").css('color', 'darkgreen');
   } else {
-    $("#info").text(String.format("D'oh! {0} {1} {2} ≠ {3}", left, sym, right, answer));
-    text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+    $("#info").text(String.format("{0} {1} {2} ≠ {3}", left, sym, right, answer));
     $("#result").css('color', 'darkred');
     g_incorrect.push([left, right]);
   }
