@@ -10,7 +10,7 @@ var OPERATION_TABLE = {
   "subtraction": "-",
   "multiplication": "×",
   "division": "÷"
-}
+};
 
 var g_done = false;
 var g_incorrect = [];
@@ -21,6 +21,41 @@ var g_timeout = 0;
 var g_timeout_id = undefined;
 var g_timeout_cur = 0;
 var G_TIMEOUT_INC = 500;
+
+var g_stats = {};
+/*
+ ** g_stats
+ * ds = date in seconds new Date().getTime()/1000
+ * pc = percent (g_number_correct) / g_number_max * 100;
+ * ts = ave response time in seconds
+ *
+*/
+var G_STAT_DATE = "ds"
+var G_STAT_PC = "pc";
+var G_STAT_AVETIME = "ts";
+
+function getTimeSecs() {
+  return Math.floor(new Date().getTime()/1000);
+}
+
+function resetStats() {
+  var now = getTimeSecs();
+  g_stats = {};
+  g_stats[G_STAT_DATE] = now;
+  g_stats[G_STAT_PC] = 0;
+  g_stats[G_STAT_AVETIME] = 0;
+}
+
+function recordStats(sym) {
+  if (g_stats[G_STAT_DATE] === undefined) {
+    return;
+  }
+  var now = getTimeSecs();
+  var then = g_stats[G_STAT_DATE];
+  g_stats[G_STAT_PC] = Math.floor(g_number_correct*100 / g_number_max);
+  g_stats[G_STAT_AVETIME] = (now-then)/g_number_max;
+  saveStats(sym, g_stats);
+}
 
 function getSymbol(oper) {
   var sym = OPERATION_TABLE[oper];
@@ -235,7 +270,7 @@ function goClick() {
   }
 
   var res = doOperation(sym, left, right);
-  var correct = res == answer;
+  var correct = (res == answer);
   var text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
   if (correct) {
     //$("#info").text(String.format("{0} {1} {2} = {3}", left, sym, right, answer));
@@ -257,6 +292,7 @@ function goClick() {
     $("#checkmark").attr('src', check);
     $("#answer").attr('disabled', 'disabled');
     $("#go").text("Restart!").focus();
+    recordStats(sym);
     clearTimeoutProgress();
   }
 }
@@ -325,6 +361,8 @@ function resetResponseCounter() {
 
   g_timeout = getIntegerOption("timeout_max") * 2000;
   g_timeout_cur = 0;
+
+  resetStats();
 }
 
 function incCounters(correct) {

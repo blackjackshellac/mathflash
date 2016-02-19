@@ -19,6 +19,7 @@ function makeJsonFile() {
   var data = {};
   data["options"] = loadOptions();
   data["name"] = loadName();
+  data["stats"] = loadStats();
   var json = JSON.stringify(data, null, 4);
 
   if (g_jsonFile !== null) {
@@ -106,6 +107,54 @@ function loadOptions() {
   g_options = options;
 
   return options;
+}
+
+/*
+  s
+    user
+      sym {
+        d: [ date, date, date ]
+        pc: [ pc, pc, pc ]
+        ts: [ ts, ts, ts ]
+      }
+*/
+function saveStats(sym, stats) {
+  var s = loadStats();
+  var us = s[g_name];
+  if (us === undefined) {
+    us = {};
+    s[g_name] = us;
+  }
+  var sym_stat = us[sym];
+  if (sym_stat === undefined) {
+    sym_stat = {};
+    sym_stat.x = [];
+    sym_stat.y0 = [];
+    sym_stat.y1 = [];
+    us[sym] = sym_stat;
+  }
+  var x = stats[G_STAT_DATE];
+  var y0 = stats[G_STAT_PC];
+  var y1 = stats[G_STAT_AVETIME];
+
+  sym_stat.x.push(x);
+  sym_stat.y0.push(y0);
+  sym_stat.y1.push(y1);
+
+  localStorage["stats"] = JSON.stringify(s);
+}
+
+function loadStats() {
+  var s = {};
+
+  try {
+    s = localStorage["stats"];
+    s = (s === undefined) ? {} : JSON.parse(s);
+  } catch (e) {
+    set_alert("alert", "error", "Failed to parse stats");
+    s = {};
+  }
+  return s;
 }
 
 function getIntegerOption(key) {
