@@ -24,7 +24,7 @@ function init_controls() {
         var barChartData = {
           labels: dates,
           datasets: [{
-            label: "My First dataset",
+            label: "Percent",
 
             // The properties below allow an array to be specified to change the value of the item at the given index
             // String  or array - the bar color
@@ -46,9 +46,9 @@ function init_controls() {
             data: stats.y0,
 
             // String - If specified, binds the dataset to a certain y-axis. If not specified, the first y-axis is used.
-            yAxisID: "y-axis-1",
+            //yAxisID: "y-axis-1",
           }, {
-            label: "My Second dataset",
+            label: "Time",
             backgroundColor: "rgba(220,220,220,0.2)",
             borderColor: "rgba(220,220,220,1)",
             borderWidth: 1,
