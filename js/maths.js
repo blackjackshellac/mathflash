@@ -5,11 +5,16 @@ var SAD_CHECK = "images/supermario/Yoshi_Icon_96.png";
 var RIGHT_CHECK = "images/supermario/Mushroom_1UP_Icon_96.png";
 var WRONG_CHECK = "images/supermario/Mushroom_Life_Icon_96.png"
 
+var SYM_ADD = "+";
+var SYM_SUB = "-";
+var SYM_MUL = "×";
+var SYM_DIV = "÷";
+
 var OPERATION_TABLE = {
-  "addition": "+",
-  "subtraction": "-",
-  "multiplication": "×",
-  "division": "÷"
+  "addition": SYM_ADD,
+  "subtraction": SYM_SUB,
+  "multiplication": SYM_MUL,
+  "division": SYM_DIV
 };
 
 var g_done = false;
@@ -23,6 +28,7 @@ var g_timeout_cur = 0;
 var G_TIMEOUT_INC = 500;
 
 var g_stats = {};
+var g_stats_sym = SYM_ADD;
 /*
  ** g_stats
  * ds = date in seconds new Date().getTime()/1000
@@ -55,6 +61,7 @@ function recordStats(sym) {
   g_stats[G_STAT_PC] = Math.floor(g_number_correct*100 / g_number_max);
   g_stats[G_STAT_AVETIME] = (now-then)/g_number_max;
   saveStats(sym, g_stats);
+  g_stats_sym = sym;
 }
 
 function getSymbol(oper) {

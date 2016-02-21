@@ -13,7 +13,8 @@ function init_controls() {
         var name = loadName();
         var stats = loadStats();
 
-        stats = stats[name]["+"];
+        // TODO need to handle all symbols
+        stats = stats[name][g_stats_sym];
 
         var dates = [];
         for (var i = 0; i < stats.x.length; i++) {
