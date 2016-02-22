@@ -1,0 +1,13 @@
+.chart-div {
+  display: table;
+  table-layout: fixed;
+  margin: 0 auto;
+}
+.dataset-div, .operations-div {
+  display: table-cell;
+  width: 50%;
+  border: 0px solid #bbb;
+  padding-left: 50px;
+  padding-right: 50px;
+  vertical-align: middle;
+}

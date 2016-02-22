@@ -9,63 +9,24 @@ function init_controls() {
     var content = "content/charts.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt === "success") {
-        set_alert("alert", statusTxt, content + " loaded successfully!");
-        var name = loadName();
-        var stats = loadStats();
 
-        // TODO need to handle all symbols
-        stats = stats[name][g_stats_sym];
-
-        var dates = [];
-        for (var i = 0; i < stats.x.length; i++) {
-          var d = new Date(stats.x[i] * 1000);
-          dates.push(d.toLocaleString());
-        }
-
-        var barChartData = {
-          labels: dates,
-          datasets: [{
-            label: "Percent",
-
-            // The properties below allow an array to be specified to change the value of the item at the given index
-            // String  or array - the bar color
-            backgroundColor: "rgba(220,220,220,0.2)",
-
-            // String or array - bar stroke color
-            borderColor: "rgba(220,220,220,1)",
-
-            // Number or array - bar border width
-            borderWidth: 1,
-
-            // String or array - fill color when hovered
-            hoverBackgroundColor: "rgba(220,220,220,0.2)",
-
-            // String or array - border color when hovered
-            hoverBorderColor: "rgba(220,220,220,1)",
-
-            // The actual data
-            data: stats.y0,
-
-            // String - If specified, binds the dataset to a certain y-axis. If not specified, the first y-axis is used.
-            //yAxisID: "y-axis-1",
-          }, {
-            label: "Time",
-            backgroundColor: "rgba(220,220,220,0.2)",
-            borderColor: "rgba(220,220,220,1)",
-            borderWidth: 1,
-            hoverBackgroundColor: "rgba(220,220,220,0.2)",
-            hoverBorderColor: "rgba(220,220,220,1)",
-            //yAxisID: "y-axis-2",
-            data: stats.y1
-          }]
-        };
-
-        var ctx = $("#canvas")[0].getContext("2d");
-        window.myBarChart = new Chart(ctx, {
-          type: 'bar',
-          data: barChartData,
-          options: {}
+        $('#operations-slider').slider({
+          formatter: function(value) {
+            var sym = OPERATION_LOOKUP[value % 4];
+            loadChart(sym, g_stats_dataset);
+            return 'Operation: ' + sym;
+          }
         });
+
+        $('#dataset-slider').slider({
+          formatter: function(value) {
+            var dataset=["percent","ave time"][value%2];
+            loadChart(g_stats_sym, value);
+            return 'Dataset: ' + dataset;
+          }
+        });
+
+        set_alert("alert", statusTxt, content + " loaded successfully!");
 
         /*
         window.myBar = new Chart(ctx).Bar(barChartData, {

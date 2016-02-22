@@ -17,6 +17,8 @@ var OPERATION_TABLE = {
   "division": SYM_DIV
 };
 
+var OPERATION_LOOKUP = [ SYM_ADD, SYM_SUB, SYM_MUL, SYM_DIV ];
+
 var g_done = false;
 var g_incorrect = [];
 var g_number_max = 0;
@@ -29,6 +31,8 @@ var G_TIMEOUT_INC = 500;
 
 var g_stats = {};
 var g_stats_sym = SYM_ADD;
+var g_stats_dataset = 0;
+
 /*
  ** g_stats
  * ds = date in seconds new Date().getTime()/1000
