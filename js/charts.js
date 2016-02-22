@@ -79,9 +79,14 @@ function loadChart(stats_sym, stats_dataset) {
   var name = loadName();
   var stats = loadStats();
 
+  if (stats[name] === undefined) {
+    set_alert("alert", "warning", "No stats for name: "+name);
+    return;
+  }
   // TODO need to handle all symbols
   stats = stats[name][g_stats_sym];
   if (stats === undefined) {
+    set_alert("alert", "warning", "No "+g_stats_sym+" stats for "+name);
     return;
   }
 
