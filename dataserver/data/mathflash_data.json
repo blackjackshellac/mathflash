@@ -1,0 +1,91 @@
+{
+  "global": {
+    "options": {
+      "left_max": "10",
+      "right_max": "10",
+      "number_max": "50",
+      "timeout_max": "0"
+    },
+    "name": "steeve"
+  },
+  "names": {
+    "default": {
+      "options": {
+        "left_max": "10",
+        "right_max": "10",
+        "number_max": "50",
+        "timeout_max": "0"
+      },
+      "stats": {
+      }
+    },
+    "etienne": {
+      "options": {
+        "left_max": "12",
+        "right_max": "12",
+        "number_max": "50",
+        "timeout_max": "0"
+      },
+      "stats": {
+      }
+    },
+    "enzo": {
+      "options": {
+        "left_max": "12",
+        "right_max": "4",
+        "number_max": "25",
+        "timeout_max": "0"
+      },
+      "stats": {
+      }
+    },
+    "steeve": {
+      "options": {
+        "left_max": "12",
+        "right_max": "12",
+        "number_max": "10",
+        "timeout_max": "0"
+      },
+      "stats": {
+        "+": {
+          "x": [
+            1455655468,
+            1455655532,
+            1455657038
+          ],
+          "y0": [
+            100,
+            100,
+            80
+          ],
+          "y1": [
+            2.4,
+            1.5,
+            2.1
+          ]
+        },
+        "-": {
+          "x": [
+
+          ],
+          "y0": [
+
+          ],
+          "y1": [
+
+          ]
+        }
+      }
+    },
+    "lissa": {
+      "options": {
+        "left_max": "20",
+        "right_max": "12",
+        "number_max": "5",
+        "timeout_max": "0"
+      },
+      "stats": {
+      }
+    }
+  }
+}
