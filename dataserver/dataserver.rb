@@ -42,8 +42,9 @@ helpers do
 		end
 	end
 
-	def pre(data)
+	def pre(data, fmt="json")
 		data=JSON.pretty_generate(data) unless data.class == String
+		return data unless fmt.eql?("pre")
 		"<pre>"+data+"</pre>"
 	end
 
@@ -98,20 +99,24 @@ end
 # 		options
 # 		stats
 #
-get '/mathflash' do
+get '/mathflash.?:format?' do
+	format=params[:format]
 	json=read_sync
-	pre data_section(json)
+	pre data_section(json), format
 end
 
-get '/mathflash/global' do
+get '/mathflash/global.?:format?' do
+	format=params[:format]
 	json=read_sync
-	pre data_section(json, [:global])
+	pre data_section(json, [:global]), format
 end
 
-get '/mathflash/global/*' do
+get '/mathflash/global/*.?:format?' do
+	format=params[:format]
+	puts "splat="+params['splat'].inspect
 	json=read_sync
 	keys = splat_keys(params['splat'], [:global])
-	pre data_section(json, keys)
+	pre data_section(json, keys), format
 end
 
 get '/mathflash/names' do
@@ -155,10 +160,8 @@ end
 #		halt 500, "No stats for name=#{name}: #{data.to_json}" unless stats.key?(name.to_sym)
 #		stats = stats[name.to_sym]
 #		puts stats
-#		stats	
+#		stats
 #	rescue => e
 #		"Failed to parse mathflash data: #{$mathflash_data}"+e.to_s
 #	end
 #end
-
-
