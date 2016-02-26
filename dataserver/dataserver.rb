@@ -60,6 +60,15 @@ helpers do
 		end
 		data
 	end
+
+	def splat_keys(splat, keys=[])
+		splat.each { |key|
+			key.split('/').each { |k|
+				keys << k.to_sym
+			}
+		}
+		keys
+	end
 end
 
 get '/' do
@@ -99,14 +108,10 @@ get '/mathflash/global' do
 	pre data_section(json, [:global])
 end
 
-get '/mathflash/global/options' do
+get '/mathflash/global/*' do
 	json=read_sync
-	pre data_section(json, [:global,:options])
-end
-
-get '/mathflash/global/name' do
-	json=read_sync
-	pre data_section(json, [:global,:name])
+	keys = splat_keys(params['splat'], [:global])
+	pre data_section(json, keys)
 end
 
 get '/mathflash/names' do
@@ -114,23 +119,23 @@ get '/mathflash/names' do
 	pre data_section(json, [:names]).keys
 end
 
-get '/mathflash/names/:name' do
+get '/mathflash/names/*' do
 	json = read_sync
-	name = params['name']
-	pre data_section(json, [:names, name.to_sym])
+	keys=splat_keys(params['splat'], [:names])
+	pre data_section(json, keys)
 end
 
-get '/mathflash/names/:name/options' do
-	json = read_sync
-	name = params['name']
-	pre data_section(json, [:names, name.to_sym, :options])
-end
+#get '/mathflash/names/:name/options' do
+#	json = read_sync
+#	name = params['name']
+#	pre data_section(json, [:names, name.to_sym, :options])
+#end
 
-get '/mathflash/names/:name/stats' do
-	json = read_sync
-	name = params['name']
-	pre data_section(json, [:names, name.to_sym, :stats])
-end
+#get '/mathflash/names/:name/stats' do
+#	json = read_sync
+#	name = params['name']
+#	pre data_section(json, [:names, name.to_sym, :stats])
+#end
 
 
 #get '/mathflash/stats/:name' do
