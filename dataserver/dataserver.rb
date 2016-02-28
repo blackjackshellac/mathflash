@@ -5,15 +5,18 @@ require 'thread'
 require 'sinatra'
 require 'json'
 
+$root=File.dirname(__FILE__)
+puts "root=#{$root}"
+
 configure {
 	set :server, :puma
-	set :port, 1962
+	set :port, 1963
 	set :bind, '0.0.0.0'
 	set :root, File.dirname(__FILE__)
 }
 
 helpers do
-	$mathflash_data = "data/mathflash_data.json"
+	$mathflash_data = File.expand_path(File.join($root, "data/mathflash_data.json"))
 	$mutex=Mutex.new
 
 	def read_save_sync(file, opts={:save=>false})
@@ -106,28 +109,31 @@ get '/mathflash.?:format?' do
 end
 
 get '/mathflash/global.?:format?' do
-	format=params[:format]
+	format=params[:format]||"json"
 	json=read_sync
 	pre data_section(json, [:global]), format
 end
 
 get '/mathflash/global/*.?:format?' do
-	format=params[:format]
+	format=params[:format]||"json"
 	puts "splat="+params['splat'].inspect
 	json=read_sync
 	keys = splat_keys(params['splat'], [:global])
 	pre data_section(json, keys), format
 end
 
-get '/mathflash/names' do
+get '/mathflash/names.?:format?' do
+	format=params[:format]||"json"
 	json = read_sync
-	pre data_section(json, [:names]).keys
+	pre data_section(json, [:names]).keys, format
 end
 
-get '/mathflash/names/*' do
+get '/mathflash/names/*.?:format?' do
+	format=params[:format]||"json"
+	puts "format=#{format} splat="+params['splat'].inspect
 	json = read_sync
 	keys=splat_keys(params['splat'], [:names])
-	pre data_section(json, keys)
+	pre data_section(json, keys), format
 end
 
 #get '/mathflash/names/:name/options' do
