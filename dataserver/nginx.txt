@@ -1,0 +1,44 @@
+# nginx proxy setup for serving HTTPS externally and passing off request to
+# dataserver.rb on the backend
+#
+# serve up dataserver by opening firewalll for OUTSIDE_PORT (eg 443)
+# and the INSIDE_PORT being used by dataserver.rb
+
+    server {
+        listen       OUTSIDE_PORT ssl;
+        listen       [::]:OUTSIDE_PORT ssl;
+
+        server_name  _;
+
+        ssl_certificate "path/to/fullchain.pem";
+        ssl_certificate_key "path/to/privkey.pem";
+
+        ssl_session_cache shared:SSL:1m;
+        ssl_session_timeout  10m;
+        ssl_ciphers PROFILE=SYSTEM;
+        ssl_prefer_server_ciphers on;
+
+		location / {
+			proxy_pass         http://127.0.0.1:INSIDE_PORT/;
+			proxy_redirect     off;
+
+			proxy_set_header   Host             $host;
+			proxy_set_header   X-Real-IP        $remote_addr;
+			proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+			proxy_max_temp_file_size 0;
+
+			client_max_body_size       10m;
+			client_body_buffer_size    128k;
+
+			proxy_connect_timeout      90;
+			proxy_send_timeout         90;
+			proxy_read_timeout         90;
+
+			proxy_buffer_size          4k;
+			proxy_buffers              4 32k;
+			proxy_busy_buffers_size    64k;
+			proxy_temp_file_write_size 64k;
+		}
+
+    }
+
