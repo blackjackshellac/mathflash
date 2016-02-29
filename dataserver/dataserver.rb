@@ -87,6 +87,11 @@ optparser.parse!
 
 class MathFlashDataServer < Sinatra::Base
 
+	def initialize
+		Dir.chdir(DOC_ROOT)
+		$log.info "Working in "+Dir.pwd
+	end
+
     configure {
         #set :root, ME
         set :environment, :production
@@ -264,7 +269,8 @@ end
 #		"Failed to parse mathflash data: #{$mathflash_data}"+e.to_s
 #	end
 #end
-	run!
-end
 
+	run!
+
+end
 
