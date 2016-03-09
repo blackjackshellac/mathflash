@@ -4,6 +4,19 @@ function init_controls() {
     $(this).addClass("active");
   });
 
+  $("#logio").click(function(e) {
+    var div = title_from(e);
+    var content = "content/auth.html";
+    $("#content").load(content, function(responseTxt, statusTxt, xhr) {
+      if (statusTxt === "success") {
+        set_alert("alert", statusTxt, content + " loaded successfully!");
+      } else {
+        set_alert("alert", statusTxt, content + " not loaded successfully!");
+      }
+    });
+
+  });
+
   $("#charts").click(function(e) {
     var div = title_from(e);
     var content = "content/charts.html";
@@ -69,7 +82,7 @@ function init_controls() {
   });
 
   $("#addition,#subtraction,#multiplication,#division").click(function(e) {
-    var oper = title_from(e);
+    var oper = title_from(e, loadName());
     var content = "content/maths.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
@@ -101,10 +114,13 @@ function init_controls() {
   });
 };
 
-function title_from(e) {
+function title_from(e, name) {
   var div = e.target.id;
   var title = "" + div;
   title = capitalize(title);
+  if (name !== undefined) {
+	  title=name + " - " + title;
+  }
   $('#h1_action').text(title);
   return div;
 };

@@ -305,6 +305,8 @@ function goClick() {
     $("#go").text("Restart!").focus();
     recordStats(sym);
     clearTimeoutProgress();
+  } else {
+    $("#answer").focus();
   }
 }
 

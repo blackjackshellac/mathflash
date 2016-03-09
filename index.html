@@ -53,14 +53,12 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Menu <span class="caret"></span></a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
             <ul id="nav_menu" class="dropdown-menu">
               <li><a id="save_options" href="#">Save options ...</a></li>
               <li><a id="load_options" href="#">Load options ... currently not implemented</a></li>
-              <!--
-            <li role="separator" class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-          -->
+              <li role="separator" class="divider"></li>
+              <li><a id="logio" href="#">Login ...</a></li>
             </ul>
           </li>
         </ul>
@@ -134,6 +132,8 @@
     });
   </script>
   <script src="/js/options.js"></script>
+  <script src="/js/jquery/jquery.cookie.js"></script>
+  <script src="/js/auth.js"></script>
   <script src="/js/maths.js"></script>
   <script src="/js/controls.js"></script>
   <script src="/js/utils.js"></script>
