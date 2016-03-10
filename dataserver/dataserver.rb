@@ -109,7 +109,7 @@ class MathFlashDataServer < Sinatra::Base
   def initialize
     Dir.chdir(DOC_ROOT)
     $log.info 'Working in ' + Dir.pwd
-    Auth::load_users(PWDF)
+    Auth.load_users(PWDF)
   end
 
   configure do
@@ -127,6 +127,7 @@ class MathFlashDataServer < Sinatra::Base
 
   before do
     Dir.chdir(DOC_ROOT)
+    puts "before\n"+request.path_info
     # if request.request_method == 'GET' || request.request_method == 'POST'
     #    response.headers["Access-Control-Allow-Origin"] = "*"
     #    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
@@ -217,20 +218,22 @@ class MathFlashDataServer < Sinatra::Base
     File.read('index.html')
   end
 
-  post '/auth' do
+  post '/login' do
 	  puts params.inspect
-    status = Auth::login(params)
-    if status.nil?
-      halt 403, "user unknown"
-    elsif status == false
-      halt 403, "password failed"
-    end
-    json = {
-      :status => true,
-      :msg => "user authenticated"
-    }.to_json
-    puts json
+    res = Auth.login(params)
+    puts "res="+res.inspect
+    halt 403, res[:msg] if !res[:status]
+    session[:token] = res[:token]
+    json = res.to_json
+    puts "json="+json
     json
+  end
+
+  post '/logout' do
+    puts "params="+params.inspect
+    halt 403, "Not authenticated" unless session.key?(:token)
+    halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
+    session[:token] = nil
   end
 
   # data format

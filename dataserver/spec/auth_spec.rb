@@ -19,8 +19,8 @@ describe "Testing Auth module" do
 		@passwd_file = File.expand_path(File.join(File.dirname(__FILE__), "passwd.json"))
 		@passwd_json = File.read(@passwd_file)
 		@params = {
-			:password => @secret,
-			:email => "steeve.mccauley@gmail.com"
+			"password" => @secret,
+			"email" => "steeve.mccauley@gmail.com"
 		}
 	end
 
@@ -30,12 +30,13 @@ describe "Testing Auth module" do
 	end
 
 	specify "should find email user" do
-		expect(Auth.find_by_email(@params[:email])).to be
+		expect(Auth.find_by_email(@params["email"])).to be
 	end
 
 	specify "should login from params" do
-		Auth.find_by_email(@params[:email])
-		expect(Auth.login(@params)).to be_truthy
+		res = Auth.login(@params)
+		puts res.inspect
+		expect(res[:status]).to be_truthy
 	end
 end
 

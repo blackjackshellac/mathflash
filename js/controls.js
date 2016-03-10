@@ -9,8 +9,10 @@ function init_controls() {
     var content = "content/auth.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt === "success") {
+        setup_auth_dialog();
+
         $("#signin").click(function(e) {
-          login();
+          logio();
         });
         set_alert("alert", statusTxt, content + " loaded successfully!");
       } else {

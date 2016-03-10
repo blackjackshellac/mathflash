@@ -23,17 +23,31 @@ require 'bcrypt'
 module Auth
 	@@auth_data = {}
 
-	def self.load_users(file)
-		json=File.read(file)
+	def self.read_json(file)
+		File.read(file)
+	rescue => e
+		raise "Failed to read file #{file}: #{e.to_s}"
+	end
+
+	def self.parse_auth(json)
 		@@auth_data = JSON.parse(json, :symbolize_names => true)
 		@@auth_data
+	rescue => e
+		raise "Failed to parse json auth_data: #{e.to_s}"
+	end
+
+	def self.load_users(file)
+		json=Auth.read_json(file)
+		parse_auth(json)
 	end
 
 	def self.save_users(file)
 		json=JSON.pretty_generate(@@auth_data)
-		#File.open(file, "w+") { |fd|
-		#	fd.print json
-		#}
+		File.open(file, "w+") { |fd|
+			fd.print json
+		}
+	rescue => e
+		raise "Failed to save auth_data to #{file}: #{e.to_s}"
 	end
 
 	def self.find_by_email(email)
@@ -46,11 +60,26 @@ module Auth
 	end
 
 	def self.login(params)
+		res = {
+			:status=>false,
+			:msg=>""
+		}
 		@user = find_by_email(params["email"])
 		# user not found
-		return nil if @user.nil?
+		if @user.nil?
+			res[:msg] = "User email not found"
+			return res
+		end
 
 		@hash = BCrypt::Password.new(@user[:hash])
-		return @hash == params["password"]
+		res[:status] = @hash == params["password"]
+		if res[:status]
+			@user[:token] = BCrypt::Password.create(@hash)
+			res[:msg] = "Ok"
+			res[:token] = @user[:token]
+		else
+			res[:msg] = "Password mismatch"
+		end
+		return res
 	end
 end
