@@ -37,6 +37,7 @@ module Auth
 	end
 
 	def self.find_by_email(email)
+		puts @@auth_data.inspect
 		@@auth_data.each_pair { |user,meta|
 			next unless meta.key?(:email)
 			return @@auth_data[user] if email.eql?(meta[:email])
@@ -45,12 +46,11 @@ module Auth
 	end
 
 	def self.login(params)
-		@user = find_by_email(params[:email])
+		@user = find_by_email(params["email"])
 		# user not found
 		return nil if @user.nil?
 
 		@hash = BCrypt::Password.new(@user[:hash])
-		return @hash == params[:password]
+		return @hash == params["password"]
 	end
 end
-

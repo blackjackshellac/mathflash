@@ -1,4 +1,3 @@
-
 function logio() {
   var ac = $.cookie('auth');
   if (ac) {
@@ -17,5 +16,22 @@ function logout(hash) {
 }
 
 function login() {
+  var remember = $('#input_remember_me').is(":checked");
+  params = {
+    "email": $('#input_email').val(),
+    "password": $('#input_password').val(),
+  }
+
+  $.post("/auth", params)
+    .done(function(data) {
+      console.log(data);
+    })
+    .fail(function(data) {
+      alert("error"+data.responseText);
+    })
+    .always(function(data) {
+      alert("finished");
+    });
+  console.log("remember=" + remember);
 
 }

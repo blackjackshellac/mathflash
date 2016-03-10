@@ -9,6 +9,9 @@ function init_controls() {
     var content = "content/auth.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt === "success") {
+        $("#signin").click(function(e) {
+          login();
+        });
         set_alert("alert", statusTxt, content + " loaded successfully!");
       } else {
         set_alert("alert", statusTxt, content + " not loaded successfully!");

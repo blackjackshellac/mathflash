@@ -29,6 +29,7 @@ require 'daybreak'
 ME = File.basename($PROGRAM_NAME, '.rb')
 MD = File.expand_path(File.dirname(__FILE__))
 MFSD = ENV['MFSD'] || File.join(MD, 'db')
+PWDF = ENV['PWDF'] || File.join(MFSD, 'passwd.json')
 TS = Time.new.strftime('%Y%m%d_%H%M')
 TMP = ENV['TMP'] || '/var/tmp'
 LOG_DIR = File.join(TMP, ME)
@@ -108,6 +109,7 @@ class MathFlashDataServer < Sinatra::Base
   def initialize
     Dir.chdir(DOC_ROOT)
     $log.info 'Working in ' + Dir.pwd
+    Auth::load_users(PWDF)
   end
 
   configure do
@@ -213,6 +215,22 @@ class MathFlashDataServer < Sinatra::Base
 
   get '/' do
     File.read('index.html')
+  end
+
+  post '/auth' do
+	  puts params.inspect
+    status = Auth::login(params)
+    if status.nil?
+      halt 403, "user unknown"
+    elsif status == false
+      halt 403, "password failed"
+    end
+    json = {
+      :status => true,
+      :msg => "user authenticated"
+    }.to_json
+    puts json
+    json
   end
 
   # data format
