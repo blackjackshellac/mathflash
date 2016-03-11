@@ -59,24 +59,44 @@ module Auth
 		return nil
 	end
 
+	def self.token_from_hash(hash)
+		Digest::SHA256.hexdigest(hash)
+	end
+
+	def self.token_from_email(params)
+		res = {
+			:status=>false,
+			:msg=>""
+		}
+		user_data = find_by_email(params["email"])
+		# user_data not found
+		if user_data.nil?
+			res[:msg] = "User email not found"
+		else
+			user_data[:token] = token_from_hash(user_data[:hash])
+			res[:token] = user_data[:token]
+			res[:status] = true
+		end
+		res
+	end
+
 	def self.login(params)
 		res = {
 			:status=>false,
 			:msg=>""
 		}
-		@user = find_by_email(params["email"])
+		user_data = find_by_email(params["email"])
 		# user not found
-		if @user.nil?
+		if user_data.nil?
 			res[:msg] = "User email not found"
 			return res
 		end
 
-		@hash = BCrypt::Password.new(@user[:hash])
-		res[:status] = @hash == params["password"]
+		password = BCrypt::Password.new(user_data[:hash])
+		res[:status] = password == params["password"]
 		if res[:status]
-			@user[:token] = BCrypt::Password.create(@hash)
-			res[:msg] = "Ok"
-			res[:token] = @user[:token]
+			user_data[:token] = token_from_hash(user_data[:hash])
+			res[:token] = user_data[:token]
 		else
 			res[:msg] = "Password mismatch"
 		end

@@ -129,6 +129,17 @@ class MathFlashDataServer < Sinatra::Base
     pi = request.path_info
     $log.debug "path_info="+request.path_info
     $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
+    $log.debug "params="+params.inspect
+
+    # on dataserver restart session tokens are lost, reload the token in the session
+    if !session.key?(:token) && params.key?("email")
+      res = Auth.token_from_email(params)
+      $log.debug "res="+res.inspect
+      if res.key?(:token) && res[:status]
+        $log.debug "Found token for email="+params["email"]
+        session[:token] = res[:token]
+      end
+    end
 
     unless ['/', '/login'].include?(pi)
       halt 403, "Not authenticated" unless session.key?(:token)
