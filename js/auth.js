@@ -10,21 +10,26 @@
 function isAuth() {
   var token = $.cookie('token');
   var email = $.cookie('email');
-  return (token && email);
+  return (token != undefined && email.length != 0);
+}
+
+function setup_auth_menu() {
+  var authd = isAuth();
+
+  var ltext = authd ? "Logout ..." : "Login ...";
+  $('#logio').text(ltext);
+
+  return authd;
 }
 
 function setup_auth_dialog() {
-    var btext = "Sign out";
-    var disabled = true;
+    var authd = setup_auth_menu();
 
-    if (isAuth()) {
-      btext = "Sign in";
-      disabled = false;
-    }
+    var btext = authd ? "Sign out" : "Sign in";
 
     $('#signin').text(btext);
-    $('#input_email').prop('disabled', disabled);
-    $('#input_password').prop('disabled', disabled);
+    $('#input_email').prop('disabled', authd);
+    $('#input_password').prop('disabled', authd);
 }
 
 function logio() {

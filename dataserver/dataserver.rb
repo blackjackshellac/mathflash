@@ -126,8 +126,17 @@ class MathFlashDataServer < Sinatra::Base
   end
 
   before do
+    pi = request.path_info
+    $log.debug "path_info="+request.path_info
+    $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
+
+    unless ['/', '/login'].include?(pi)
+      halt 403, "Not authenticated" unless session.key?(:token)
+      halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
+      break
+    end
+
     Dir.chdir(DOC_ROOT)
-    puts "before\n"+request.path_info
     # if request.request_method == 'GET' || request.request_method == 'POST'
     #    response.headers["Access-Control-Allow-Origin"] = "*"
     #    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
@@ -230,9 +239,6 @@ class MathFlashDataServer < Sinatra::Base
   end
 
   post '/logout' do
-    puts "params="+params.inspect
-    halt 403, "Not authenticated" unless session.key?(:token)
-    halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
     session[:token] = nil
   end
 
