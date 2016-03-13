@@ -1,0 +1,5 @@
+sudo gem install sinatra
+sudo gem install puma
+sudo gem install daybreak
+sudo gem install bcrypt
+			  
