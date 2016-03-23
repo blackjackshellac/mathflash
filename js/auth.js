@@ -40,7 +40,6 @@ function logio() {
   } else {
     login();
   }
-  setup_auth_dialog();
 }
 
 function logout(email, token) {
@@ -60,7 +59,7 @@ function logout(email, token) {
       alert("error" + data.responseText);
     })
     .always(function(data) {
-
+      setup_auth_dialog();
     });
 }
 
@@ -82,8 +81,7 @@ function login() {
       alert(data.responseText);
     })
     .always(function(data) {
-
+      setup_auth_dialog();
     });
-  console.log("remember=" + remember);
 
 }
