@@ -155,7 +155,7 @@ function fillNamesMenu() {
   }
   $('ul#name_list.dropdown-menu li a').click(function(e) {
     var id = e.target.id;
-    var name = $("#" + id).text().toLowerCase();
+    var name = $("#" + id).text();
     setOptionsControls(name);
     e.preventDefault();
   });
