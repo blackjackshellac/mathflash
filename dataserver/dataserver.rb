@@ -18,8 +18,6 @@
 #
 
 require 'fileutils'
-require 'optparse'
-require 'logger'
 require 'json'
 require 'thread'
 require 'sinatra/base'
@@ -36,17 +34,14 @@ LOG_DIR = File.join(TMP, ME)
 NOW = Time.new.strftime('%Y%m')
 LOG_FILE = "#{LOG_DIR}/#{ME}_#{NOW}.log".freeze
 
-require File.join(MD, "lib", "auth")
+LIB=File.join(MD,"lib")
+
+require File.join(LIB, "auth")
+require File.join(LIB, "logger")
+require File.join(LIB, "o_parser")
 
 DOC_ROOT = File.expand_path(File.join(MD, '..'))
 puts "root=#{DOC_ROOT}"
-
-class Logger
-  def die(msg)
-    error(msg)
-    exit 1
-  end
-end
 
 class String
   def to_boolean
@@ -54,17 +49,7 @@ class String
   end
 end
 
-def set_logger(stream, level)
-  log = Logger.new(stream)
-  log.level = level
-  log.datetime_format = '%Y-%m-%d %H:%M:%S'
-  log.formatter = proc do |severity, datetime, _progname, msg|
-    "#{severity} #{datetime}: #{msg}\n"
-  end
-  log
-end
-
-$log = set_logger(STDOUT, Logger::DEBUG)
+$log = Logger::set_logger(STDOUT, Logger::DEBUG)
 
 $log.info "Environment variable MFSD=#{MFSD}"
 $log.die "Mathflash server data directory not found: #{MFSD}" unless File.directory?(MFSD)
@@ -76,34 +61,32 @@ $opts = {
   ssl: false,
   pass: File.join(MFSD, 'passwd.json'),
   log_file: nil,
-  level: $log.level # Logger::DEBUG #INFO
+  logger: $log,
+  level: $log.level # Logger::DEBUG #INFO,
 }
 
-optparser = OptionParser.new do |opts|
-  opts.banner = "#{ME}.rb [options]"
+$opts = OParser.parse($opts, "#{MD}/data/help.txt") { |opts|
+	opts.on('-p', '--port PORT', Integer, "Server port, default=#{$opts[:port]}") do |port|
+		$opts[:port] = port
+	end
 
-  opts.on('-p', '--port PORT', Integer, "Server port, default=#{$opts[:port]}") do |port|
-    $opts[:port] = port
-  end
+	opts.on('-D', '--[no-]debug', 'Control debug logging') do |debug|
+		$opts[:level] = debug ? Logger::DEBUG : Logger::INFO
+	end
 
-  opts.on('-D', '--[no-]debug', 'Control debug logging') do |debug|
-    $opts[:level] = debug ? Logger::DEBUG : Logger::INFO
-  end
+	opts.on('-l', '--logfile [FILE]', String, "Log file path, default=#{LOG_FILE}") do |log_file|
+		$opts[:log_file] = log_file || LOG_FILE
+	end
 
-  opts.on('-l', '--logfile [FILE]', String, "Log file path, default=#{LOG_FILE}") do |log_file|
-    $opts[:log_file] = log_file || LOG_FILE
-  end
+	opts.on('-h', '--help', 'Help') do
+		puts opts
 
-  opts.on('-h', '--help', 'Help') do
-    puts opts
+		puts "\npasswd data=" + $opts[:pass]
+		puts
 
-    puts "\npasswd data=" + $opts[:pass]
-    puts
-
-    exit 0
-  end
-end
-optparser.parse!
+		exit 0
+	end
+}
 
 class MathFlashDataServer < Sinatra::Base
   def initialize
@@ -141,11 +124,11 @@ class MathFlashDataServer < Sinatra::Base
       end
     end
 
-    unless ['/', '/login'].include?(pi)
-      halt 403, "Not authenticated" unless session.key?(:token)
-      halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
-      break
-    end
+    #unless ['/', '/login'].include?(pi)
+    #  halt 403, "Not authenticated" unless session.key?(:token)
+    #  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
+    #  break
+    #end
 
     Dir.chdir(DOC_ROOT)
     # if request.request_method == 'GET' || request.request_method == 'POST'
