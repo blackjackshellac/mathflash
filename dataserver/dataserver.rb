@@ -113,6 +113,9 @@ class MathFlashDataServer < Sinatra::Base
     $log.debug "path_info="+request.path_info
     $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
     $log.debug "params="+params.inspect
+	$log.debug "client ip="+request.ip
+
+	$log.debug "session="+session.inspect
 
     # on dataserver restart session tokens are lost, reload the token in the session
     if !session.key?(:token) && params.key?("email")
@@ -123,6 +126,8 @@ class MathFlashDataServer < Sinatra::Base
         session[:token] = res[:token]
       end
     end
+
+	#$log.debug "session token="+session[:token] if session.key?(:token)
 
     #unless ['/', '/login'].include?(pi)
     #  halt 403, "Not authenticated" unless session.key?(:token)
@@ -193,19 +198,19 @@ class MathFlashDataServer < Sinatra::Base
       '<pre>' + data + '</pre>'
     end
 
-    def data_section(json, keys = nil)
-      data = JSON.parse(json, symbolize_names: true)
-      return data if keys.nil?
-      unless keys.nil?
-        puts keys.to_json
-        keys.each do |key|
-          break unless data.class == Hash
-          halt 500, "Unknown key #{key}: #{json}" unless data.key?(key)
-          data = data[key]
-        end
-      end
-      data
-    end
+	def data_section(json, keys = nil)
+		data = JSON.parse(json, symbolize_names: true)
+		return data if keys.nil?
+		halt 500 unless keys.class == Array
+		puts keys.to_json
+		sections = {}
+		keys.each do |key|
+			break unless data.class == Hash
+			halt 500, "Unknown key #{key}: #{json}" unless data.key?(key)
+			sections[key] = data[key]
+		end
+		sections
+	end
 
     def splat_keys(splat, keys = [])
       splat.each do |key|
@@ -222,18 +227,23 @@ class MathFlashDataServer < Sinatra::Base
   end
 
   post '/login' do
-	  puts params.inspect
-    res = Auth.login(params)
-    puts "res="+res.inspect
-    halt 403, res[:msg] if !res[:status]
-    session[:token] = res[:token]
-    json = res.to_json
-    puts "json="+json
-    json
+	  puts "/login params="+params.inspect
+	  res = Auth.login(params)
+	  puts "res="+res.inspect
+	  halt 403, res[:msg] if !res[:status]
+	  session[:token] = res[:token]
+	  json = res.to_json
+	  puts "json="+json
+	  json
   end
 
   post '/logout' do
-    session[:token] = nil
+	  puts "/logout params="+params.inspect
+	  res = Auth.logout(params)
+	  session[:token] = nil
+	  json = res.to_json
+	  puts "json="+json
+	  json
   end
 
   # data format
@@ -295,3 +305,4 @@ class MathFlashDataServer < Sinatra::Base
 
   run!
 end
+

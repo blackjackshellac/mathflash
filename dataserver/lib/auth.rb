@@ -81,8 +81,13 @@ module Auth
 		return nil
 	end
 
-	def self.token_from_hash(hash)
-		Digest::SHA256.hexdigest(hash)
+	def self.create_token(user_data)
+		hash=user_data[:hash]
+		user=user_data[:user]
+		time=(Time.now.to_f*1000000).to_s
+		Digest::SHA256.hexdigest(user+hash+time) 
+	rescue => e
+		@@log.debug "create_token failed: #{e.to_s}"
 	end
 
 	def self.token_from_email(params)
@@ -95,8 +100,30 @@ module Auth
 		if user_data.nil?
 			res[:msg] = "User email not found"
 		else
-			user_data[:token] = token_from_hash(user_data[:hash])
+			user_data[:token] = create_token(user_data)
 			res[:token] = user_data[:token]
+			res[:status] = true
+		end
+		res
+	end
+
+	def self.logout(params)
+		res = {
+			:status=>false,
+			:msg=>""
+		}
+		user_data = find_by_email(params["email"])
+		# user_data not found
+		if user_data.nil?
+			res[:msg] = "User email not found"
+		else
+			$log.error "missing params['token']" unless params.key?("token")
+			if user_data.key?(:token)
+				token = params["token"]||""
+				$log.error "token mismatch #{token} != #{user_data[:token]}" unless token.eql?(user_data[:token])
+				user_data.delete(:token)
+			end
+			res[:token] = nil
 			res[:status] = true
 		end
 		res
@@ -117,7 +144,7 @@ module Auth
 		password = BCrypt::Password.new(user_data[:hash])
 		res[:status] = password == params["password"]
 		if res[:status]
-			user_data[:token] = token_from_hash(user_data[:hash])
+			user_data[:token] = create_token(user_data)
 			res[:token] = user_data[:token]
 		else
 			res[:msg] = "Password mismatch"
