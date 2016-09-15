@@ -23,11 +23,14 @@ require 'thread'
 require 'sinatra/base'
 require 'puma'
 require 'daybreak'
+require 'sqlite3'
 
 ME = File.basename($PROGRAM_NAME, '.rb')
 MD = File.expand_path(File.dirname(__FILE__))
 MFSD = ENV['MFSD'] || File.join(MD, 'db')
 PWDF = ENV['PWDF'] || File.join(MFSD, 'passwd.json')
+MATHFLASH_DATA = File.join(MFSD, "mathflash_data.sqlite3")
+MATHFLASH_INIT = File.join(MFSD, "mathflash_init.sql")
 TS = Time.new.strftime('%Y%m%d_%H%M')
 TMP = ENV['TMP'] || '/var/tmp'
 LOG_DIR = File.join(TMP, ME)
@@ -50,6 +53,7 @@ class String
 end
 
 $log = Logger::set_logger(STDOUT, Logger::DEBUG)
+Auth::set_logger($log)
 
 $log.info "Environment variable MFSD=#{MFSD}"
 $log.die "Mathflash server data directory not found: #{MFSD}" unless File.directory?(MFSD)
@@ -60,6 +64,7 @@ $opts = {
   addr: '0.0.0.0',
   ssl: false,
   pass: File.join(MFSD, 'passwd.json'),
+  dbfile: MATHFLASH_DATA,
   log_file: nil,
   logger: $log,
   level: $log.level # Logger::DEBUG #INFO,
@@ -92,7 +97,15 @@ class MathFlashDataServer < Sinatra::Base
   def initialize
     Dir.chdir(DOC_ROOT)
     $log.info 'Working in ' + Dir.pwd
-    Auth.load_users(PWDF)
+
+	$db = SQLite3::Database.new( $opts[:dbfile], :results_as_hash=>true )
+	$db.execute(File.read(MATHFLASH_INIT)) { |row|
+		row.each { |rs|
+			puts rs.inspect
+		}
+	}
+
+    #Auth.load_users(PWDF)
   end
 
   configure do
@@ -104,46 +117,54 @@ class MathFlashDataServer < Sinatra::Base
     set :root, DOC_ROOT
     set :public_folder, DOC_ROOT
     set :show_exceptions, false
-    set :dump_errors, false
+    set :dump_errors, true
     set :server, :puma
   end
 
   before do
-    pi = request.path_info
-    $log.debug "path_info="+request.path_info
-    $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
-    $log.debug "params="+params.inspect
-	$log.debug "client ip="+request.ip
+	  pi = request.path_info
 
-	$log.debug "session="+session.inspect
+	  params[:db]=$db
 
-    # on dataserver restart session tokens are lost, reload the token in the session
-    if !session.key?(:token) && params.key?("email")
-      res = Auth.token_from_email(params)
-      $log.debug "res="+res.inspect
-      if res.key?(:token) && res[:status]
-        $log.debug "Found token for email="+params["email"]
-        session[:token] = res[:token]
-      end
+	  $log.debug "path_info="+request.path_info
+	  $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
+	  $log.debug "params="+params.inspect
+	  $log.debug "client ip="+request.ip
+
+	  $log.debug "session="+session.inspect
+
+	  # on dataserver restart session tokens are lost, reload the token in the session
+	  if !session.key?(:token) && params.key?("email")
+		  begin
+			  res = Auth.token_from_email(params)
+		  rescue => e
+			  $log.debug "No user: "+e.message
+			  halt 403, "User unknown"
+		  end
+
+		  $log.debug "res="+res.inspect
+		  if res.key?(:token) && res[:status]
+			  $log.debug "Found token for email="+params["email"]
+			  session[:token] = res[:token]
+		  end
+	  end
+
+	  #$log.debug "session token="+session[:token] if session.key?(:token)
+
+	  #unless ['/', '/login'].include?(pi)
+	  #  halt 403, "Not authenticated" unless session.key?(:token)
+	  #  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
+	  #  break
+	  #end
+
+	  Dir.chdir(DOC_ROOT)
+	  # if request.request_method == 'GET' || request.request_method == 'POST'
+	  #    response.headers["Access-Control-Allow-Origin"] = "*"
+	  #    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
+	  # end
     end
 
-	#$log.debug "session token="+session[:token] if session.key?(:token)
-
-    #unless ['/', '/login'].include?(pi)
-    #  halt 403, "Not authenticated" unless session.key?(:token)
-    #  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
-    #  break
-    #end
-
-    Dir.chdir(DOC_ROOT)
-    # if request.request_method == 'GET' || request.request_method == 'POST'
-    #    response.headers["Access-Control-Allow-Origin"] = "*"
-    #    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
-    # end
-  end
-
   helpers do
-    $mathflash_db = Daybreak::DB.new File.join(MFSD,"mathflash_data.db")
     $mathflash_data = File.join(MFSD, 'mathflash_data.json')
     $mutex = Mutex.new
 

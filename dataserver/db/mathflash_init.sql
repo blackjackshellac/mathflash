@@ -26,5 +26,8 @@ CREATE TABLE IF NOT EXISTS "stats" (
 );
 CREATE INDEX IF NOT EXISTS index_stats on stats (operation,timestamp);
 
-insert into users (user,email,hash) values ("steeve", "steeve.mccauley@gmail.com", "foo");
+CREATE TABLE IF NOT EXISTS "foo" (
+	`uid`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	'bar'	TEXT NOT NULL UNIQUE
+);
 

@@ -3,6 +3,7 @@
 
 require 'json'
 require 'bcrypt'
+require 'sqlite3'
 
 #
 # json file
@@ -20,10 +21,16 @@ require 'bcrypt'
 # }
 #
 
+class AuthError < StandardError
+
+end
+
+class AuthNoUser < StandardError
+
+end
+
 module Auth
 	@@log = nil
-	@@auth_data = nil
-	@@passwd_file = nil
 
 	def self.set_logger(log)
 		@@log = log
@@ -35,50 +42,62 @@ module Auth
 		raise "Failed to read file #{file}: #{e.to_s}"
 	end
 
-	def self.parse_auth(json)
-		@@auth_data = JSON.parse(json, :symbolize_names => true)
-		@@auth_data
-	rescue => e
-		raise "Failed to parse json auth_data: #{e.to_s}"
-	end
-
-	def self.load_users(file)
-		json=Auth.read_json(file)
-		parse_auth(json)
-		@@passwd_file = file
-	end
-
-	def self.save_users
-		raise "auth data not loaded, must call load_users" if @@passwd_file.nil? || @@auth_data.nil?
-		json=JSON.pretty_generate(@@auth_data)
-		File.open(@@passwd_file, "w+") { |fd|
-			fd.print json
+	def self.create_user_data(params)
+		h = {
+			:user  => params[:user],
+			:email => params[:email],
 		}
-	rescue => e
-		raise "Failed to save auth_data to #{file}: #{e.to_s}"
+
+		h[:token] = params[:token] if params.key?(:token)
+
+		if params.key?(:passwd)
+			h[:hash] = BCrypt::Password.create(params[:passwd])
+		elsif params.key?(:hash)
+			h[:hash] = params[:hash]
+		else
+			raise AuthError.new, __method__+"Missing :passwd or :hash"
+		end
+
+		h
 	end
 
-	def self.save_user(user, passwd, email)
-		suser=user.to_sym
-		@@auth_data[suser]={
-			:user  => user,
-			:hash  => BCrypt::Password.create(passwd),
-			:email => email
+	def self.find_by_user_email(db, user, email)
+		user_data = {}
+
+		db.prepare("select * from users where user = :user OR email = :email LIMIT 1") { |stm|
+			rs = stm.execute "user"=>user, "email"=>email
+			rs.each { |row|
+				user_data[:user] = row["user"]
+				user_data[:hash] = row["hash"]
+				user_data[:email] = row["email"]
+			}
 		}
+
+		if user_data.key?(:email)
+			raise AuthError.new "email mismatch: #{email} != #{user_data[:email]}" unless email.eql?(user_data[:email])
+		end
+
+		return user_data
 	end
 
-	def self.find_by_user(user)
-		suser=user.to_sym
-		return @@auth_data[suser]
+	def self.find_by_user(db, user)
+		user_data=find_by_user_email(db, user, nil)
+
+		raise AuthNoUser.new, "User not found: #{user}" unless user_data[:user]
+
+		return user_data 
+
 	end
 
-	def self.find_by_email(email)
-		puts @@auth_data.inspect
-		@@auth_data.each_pair { |user,meta|
-			next unless meta.key?(:email)
-			return @@auth_data[user] if email.eql?(meta[:email])
-		}
-		return nil
+	def self.find_by_email(db, email)
+		@@log.debug "db=#{db.inspect}"
+		@@log.debug "email=#{email}"
+
+		user_data=find_by_user_email(db, nil, email)
+
+		raise AuthNoUser.new, "User data not found for email #{email}" unless user_data[:user]
+
+		return user_data 
 	end
 
 	def self.create_token(user_data)
@@ -95,15 +114,10 @@ module Auth
 			:status=>false,
 			:msg=>""
 		}
-		user_data = find_by_email(params["email"])
-		# user_data not found
-		if user_data.nil?
-			res[:msg] = "User email not found"
-		else
-			user_data[:token] = create_token(user_data)
-			res[:token] = user_data[:token]
-			res[:status] = true
-		end
+		user_data = find_by_email(params[:db], params["email"])
+		user_data[:token] = create_token(user_data)
+		res[:token] = user_data[:token]
+		res[:status] = true
 		res
 	end
 
@@ -112,7 +126,7 @@ module Auth
 			:status=>false,
 			:msg=>""
 		}
-		user_data = find_by_email(params["email"])
+		user_data = find_by_email(params[:db], params["email"])
 		# user_data not found
 		if user_data.nil?
 			res[:msg] = "User email not found"
@@ -134,7 +148,7 @@ module Auth
 			:status=>false,
 			:msg=>""
 		}
-		user_data = find_by_email(params["email"])
+		user_data = find_by_email(params[:db], params["email"])
 		# user not found
 		if user_data.nil?
 			res[:msg] = "User email not found"
@@ -159,43 +173,50 @@ module Auth
 		return user,passwd,email
 	end
 
-	def self.add(opts)
+	def self.add_user(opts)
 		user,passwd,email = Auth::upe(opts)
+		db = opts[:db]
 
 		@@log.die "user name must be set" if user.nil?
 		@@log.die "passwd string must be set" if passwd.nil?
 		@@log.die "email must be set" if email.nil?
+		@@log.die "db must be set" if db.nil?
 
-		save_user(user, passwd, email)
+		user_data=create_user_data(opts)
+		@@log.debug "user_data = #{user_data.inspect}"
+		hash = user_data[:hash]
 
-		@@log.debug "User=#{user}"
-		@@log.debug JSON.pretty_generate(@@auth_data[suser])
-		return unless opts[:save]
-		Auth::save_users
+		db.prepare("insert into users (user, email, hash) values (:user, :email, :hash)") { |stm|
+			stm.execute "user"=>user, "email"=>email, "hash"=>hash
+		}
+	rescue SQLite3::ConstraintException => e
+		@@log.error "#{__method__} failed: user #{user} already exists in database"
+	rescue => e
+		puts e.backtrace
+		@@log.die "#{__method__} failed: "+e.to_s
 	end
 
-	def self.test(opts)
+
+	def self.test_user(opts)
 		user,passwd,email = Auth::upe(opts)
 
 		@@log.die "passwd string must be set" if passwd.nil?
+		@@log.die "user or email must be set" if email.nil? && user.nil?
 
-		user_data=nil
-		if !user.nil?
-			user_data = find_by_user(user)
-		elsif !email.nil?
-			user_data = find_by_email(email)
-		else
-			$log.die "must specify either user or email"
-		end
-
-		raise "user_data not found" if user_data.nil?
+		db = opts[:db]
+		user_data = find_by_user_email(db, user, email)
 
 		@@log.debug JSON.pretty_generate(user_data)
 
+		raise "user #{user} or email #{email} not found" if user_data.empty?
+
 		pw = BCrypt::Password.new(user_data[:hash])
 
-		raise "failed to authenticate user" unless pw == passwd
+		@@log.debug "pw = "+pw.inspect
+
+		raise AuthError.new, "failed to authenticate user #{pw} != #{passwd}" unless pw == passwd
 
 	end
+
 
 end

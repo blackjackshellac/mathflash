@@ -16,6 +16,10 @@ require File.join(LIB, "o_parser")
 
 $log = Logger::set_logger(STDOUT, Logger::DEBUG)
 
+DB_MATHFLASH_DB = File.join(MD, "db")
+DB_MATHFLASH_DATA = File.join(DB_MATHFLASH_DB, "mathflash_data.sqlite3")
+DB_MATHFLASH_INIT = File.join(DB_MATHFLASH_DB, "mathflash_init.sql")
+
 $opts = {
 	:user => nil,
 	:passwd => nil,
@@ -23,7 +27,9 @@ $opts = {
 	:logger => $log,
 	:save => false,
 	:test => false,
-	:passfile => File.join(MD, "db/passwd.json")
+	:passfile => File.join(MD, "db/passwd.json"),
+	:dbfile => DB_MATHFLASH_DATA,
+	:db => nil
 }
 
 $opts = OParser.parse($opts, nil) { |opts|
@@ -52,12 +58,22 @@ $opts = OParser.parse($opts, nil) { |opts|
 	}
 }
 
+$log.debug "Opening database #{$opts[:dbfile]}"
+$opts[:db]=SQLite3::Database.new( $opts[:dbfile], :results_as_hash=>true )
+
+$log.debug "Initializing database from #{DB_MATHFLASH_INIT}"
+sql_init=File.read(DB_MATHFLASH_INIT)
+$opts[:db].execute(sql_init) { |row|
+	puts row.inspect
+}
+
 Auth::set_logger($log)
-Auth::load_users($opts[:passfile])
 
 if $opts[:test]
-	Auth::test($opts)
+	#Auth::test($opts)
+	Auth::test_user($opts)
 else
-	Auth::add($opts)
+	#Auth::add($opts)
+	Auth::add_user($opts)
 end
 
