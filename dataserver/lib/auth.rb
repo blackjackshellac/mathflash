@@ -70,6 +70,7 @@ module Auth
 				user_data[:user] = row["user"]
 				user_data[:hash] = row["hash"]
 				user_data[:email] = row["email"]
+				user_data[:uid] = row["uid"]
 			}
 		}
 
@@ -138,6 +139,7 @@ module Auth
 				user_data.delete(:token)
 			end
 			res[:token] = nil
+			res[:uid] = nil
 			res[:status] = true
 		end
 		res
@@ -160,6 +162,7 @@ module Auth
 		if res[:status]
 			user_data[:token] = create_token(user_data)
 			res[:token] = user_data[:token]
+			res[:uid] = user_data[:uid]
 		else
 			res[:msg] = "Password mismatch"
 		end

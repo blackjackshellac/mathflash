@@ -190,10 +190,8 @@ function goOptionsSave() {
   set_alert("alert", "success", "Saved options for name=" + name);
 }
 
-function fillNamesMenu() {
+function fillNames(names) {
   var sul = $('ul#name_list.dropdown-menu');
-  // <li><a id="name-list-0" href="#">default</a></li>
-  var names = Object.keys(g_options);
   sul.empty();
   for (var i = 0; i < names.length; i++) {
     var id = 'name-list-' + i;
@@ -209,3 +207,30 @@ function fillNamesMenu() {
     e.preventDefault();
   });
 }
+
+function fillNamesMenu() {
+  // <li><a id="name-list-0" href="#">default</a></li>
+  getNames(fillNames);
+}
+
+function getNames(fillNamesCallback) {
+	var token = $.cookie('token');
+	var email = $.cookie('email');
+	var params = {
+		"email": email,
+		"token": token
+	};
+	var res=[];
+	$.get("/mathflash/names", params)
+		.done(function(data) {
+			console.log(data);
+			res=JSON.parse(data);
+			fillNamesCallback(res);
+		})
+		.fail(function(data) {
+			alert(data.responseText);
+		})
+		.always(function(data) {
+		});
+}
+

@@ -47,9 +47,9 @@ DOC_ROOT = File.expand_path(File.join(MD, '..'))
 puts "root=#{DOC_ROOT}"
 
 class String
-  def to_boolean
-    casecmp('true').zero? ? true : false
-  end
+	def to_boolean
+		casecmp('true').zero? ? true : false
+	end
 end
 
 $log = Logger::set_logger(STDOUT, Logger::DEBUG)
@@ -59,15 +59,15 @@ $log.info "Environment variable MFSD=#{MFSD}"
 $log.die "Mathflash server data directory not found: #{MFSD}" unless File.directory?(MFSD)
 
 $opts = {
-  dir: File.dirname(__FILE__),
-  port: 1963,
-  addr: '0.0.0.0',
-  ssl: false,
-  pass: File.join(MFSD, 'passwd.json'),
-  dbfile: MATHFLASH_DATA,
-  log_file: nil,
-  logger: $log,
-  level: $log.level # Logger::DEBUG #INFO,
+	dir: File.dirname(__FILE__),
+	port: 1963,
+	addr: '0.0.0.0',
+	ssl: false,
+	pass: File.join(MFSD, 'passwd.json'),
+	dbfile: MATHFLASH_DATA,
+	log_file: nil,
+	logger: $log,
+	level: $log.level # Logger::DEBUG #INFO,
 }
 
 $opts = OParser.parse($opts, "#{MD}/data/help.txt") { |opts|
@@ -94,9 +94,9 @@ $opts = OParser.parse($opts, "#{MD}/data/help.txt") { |opts|
 }
 
 class MathFlashDataServer < Sinatra::Base
-  def initialize
-    Dir.chdir(DOC_ROOT)
-    $log.info 'Working in ' + Dir.pwd
+	def initialize
+		Dir.chdir(DOC_ROOT)
+		$log.info 'Working in ' + Dir.pwd
 
 	$db = SQLite3::Database.new( $opts[:dbfile], :results_as_hash=>true )
 	$db.execute(File.read(MATHFLASH_INIT)) { |row|
@@ -105,119 +105,121 @@ class MathFlashDataServer < Sinatra::Base
 		}
 	}
 
-    #Auth.load_users(PWDF)
-  end
+		#Auth.load_users(PWDF)
+	end
 
-  configure do
-    # set :root, ME
-    set :environment, :production
-    set :bind, $opts[:addr]
-    set :port, $opts[:port]
-    set :sessions, true
-    set :root, DOC_ROOT
-    set :public_folder, DOC_ROOT
-    set :show_exceptions, false
-    set :dump_errors, true
-    set :server, :puma
-  end
+	configure do
+		# set :root, ME
+		set :environment, :production
+		set :bind, $opts[:addr]
+		set :port, $opts[:port]
+		set :sessions, true
+		set :root, DOC_ROOT
+		set :public_folder, DOC_ROOT
+		set :show_exceptions, false
+		set :dump_errors, true
+		set :server, :puma
+	end
 
-  before do
-	  pi = request.path_info
+	before do
+		pi = request.path_info
 
-	  params[:db]=$db
+		params[:db]=$db
 
-	  $log.debug "path_info="+request.path_info
-	  $log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
-	  $log.debug "params="+params.inspect
-	  $log.debug "client ip="+request.ip
+		$log.debug "path_info="+request.path_info
+		$log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
+		$log.debug "params="+params.inspect
+		$log.debug "client ip="+request.ip
 
-	  $log.debug "session="+session.inspect
+		$log.debug "session="+session.inspect
 
-	  # on dataserver restart session tokens are lost, reload the token in the session
-	  if !session.key?(:token) && params.key?("email")
-		  begin
-			  res = Auth.token_from_email(params)
-		  rescue => e
-			  $log.debug "No user: "+e.message
-			  halt 403, "User unknown"
-		  end
+		# on dataserver restart session tokens are lost, reload the token in the session
+		if (!session.key?(:token) || !session.key?(:uid)) && params.key?("email")
+			begin
+				res = Auth.token_from_email(params)
+			rescue => e
+				$log.debug "No user: "+e.message
+				halt 403, "User unknown"
+			end
 
-		  $log.debug "res="+res.inspect
-		  if res.key?(:token) && res[:status]
-			  $log.debug "Found token for email="+params["email"]
-			  session[:token] = res[:token]
-		  end
-	  end
+			$log.debug "res="+res.inspect
+			if res.key?(:token) && res[:status]
+				$log.debug "Found token for email="+params["email"]
+				session[:token] = res[:token]
+				session[:uid] = res[:uid]
+			end
+		end
 
-	  #$log.debug "session token="+session[:token] if session.key?(:token)
+		#$log.debug "session token="+session[:token] if session.key?(:token)
 
-	  #unless ['/', '/login'].include?(pi)
-	  #  halt 403, "Not authenticated" unless session.key?(:token)
-	  #  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
-	  #  break
-	  #end
+		#unless ['/', '/login'].include?(pi)
+		#  halt 403, "Not authenticated" unless session.key?(:token)
+		#  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
+		#  break
+		#end
 
-	  Dir.chdir(DOC_ROOT)
-	  # if request.request_method == 'GET' || request.request_method == 'POST'
-	  #    response.headers["Access-Control-Allow-Origin"] = "*"
-	  #    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
-	  # end
-    end
+		Dir.chdir(DOC_ROOT)
+		# if request.request_method == 'GET' || request.request_method == 'POST'
+		#    response.headers["Access-Control-Allow-Origin"] = "*"
+		#    response.headers["Access-Control-Allow-Methods"] = "POST, GET"
+		# end
+		end
 
-  helpers do
-    $mathflash_data = File.join(MFSD, 'mathflash_data.json')
-    $mutex = Mutex.new
+	helpers do
+		$mathflash_data = File.join(MFSD, 'mathflash_data.json')
+		$mutex = Mutex.new
 
-    def read_save_sync(file, opts = { save: false })
-      $mutex.synchronize do
-        if opts[:save]
-          puts "Saving file #{file}"
-        else
-          File.read(file)
-        end
-      end
-    end
+		def read_save_sync(file, opts = { save: false })
+			$mutex.synchronize do
+				if opts[:save]
+					puts "Saving file #{file}"
+				else
+					File.read(file)
+				end
+			end
+		end
 
-    def read_save_db(key, value, opts = { save: false })
-      $mutex.synchronize do
-        if opts[:save]
-          $mathflash_db[key] = value
-          $mathflash_db.flush
-        else
-          return $mathflash_db[key]
-        end
-      end
-    end
+		def read_save_db(key, value, opts = { save: false })
+			$mutex.synchronize do
+				if opts[:save]
+					$mathflash_db[key] = value
+					$mathflash_db.flush
+				else
+					return $mathflash_db[key]
+				end
+			end
+		end
 
-    def read_db(key, value)
-      read_save_db(key, value, :save=>false)
-    rescue => e
-      halt 500, "Failed to read mathflash key=#{key}: " + e.to_s
-    end
+		def read_db(uid)
 
-    def save_db(key, value)
-      read_save_db(key, value, :save=>true)
-    rescue => e
-      halt 500, "Failed to save mathflash key=#{key} value=#{value.inspect}: " + e.to_s
-    end
 
-    def read_sync
-      read_save_sync($mathflash_data)
-    rescue => e
-      halt 500, "Failed to read mathflash data: #{$mathflash_data}" + e.to_s
-    end
+		rescue => e
+			halt 500, "Failed to read mathflash key=#{key}: " + e.to_s
+		end
 
-    def write_sync
-      read_save_sync($mathflash_data, save: true)
-    rescue => e
-      halt 500, "Failed to write mathflash data: #{$mathflash_data}" + e.to_s
-    end
+		def save_db(key, value)
+			read_save_db(key, value, :save=>true)
+		rescue => e
+			halt 500, "Failed to save mathflash key=#{key} value=#{value.inspect}: " + e.to_s
+		end
 
-    def pre(data, fmt = 'json')
-      data = JSON.pretty_generate(data) unless data.class == String
-      return data unless fmt.eql?('pre')
-      '<pre>' + data + '</pre>'
-    end
+		def read_sync
+			read_save_sync($mathflash_data)
+		rescue => e
+			halt 500, "Failed to read mathflash data: #{$mathflash_data}" + e.to_s
+		end
+
+		def write_sync
+			read_save_sync($mathflash_data, save: true)
+		rescue => e
+			halt 500, "Failed to write mathflash data: #{$mathflash_data}" + e.to_s
+		end
+
+		def pre(data, fmt = 'json')
+			data = JSON.pretty_generate(data) unless data.class == String
+			return data unless fmt.eql?('pre')
+			'<pre>' + data + '</pre>'
+		end
 
 	def data_section(json, keys = nil)
 		data = JSON.parse(json, symbolize_names: true)
@@ -233,97 +235,104 @@ class MathFlashDataServer < Sinatra::Base
 		sections
 	end
 
-    def splat_keys(splat, keys = [])
-      splat.each do |key|
-        key.split('/').each do |k|
-          keys << k.to_sym
-        end
-      end
-      keys
-    end
-  end
+		def splat_keys(splat, keys = [])
+			splat.each do |key|
+				key.split('/').each do |k|
+					keys << k.to_sym
+				end
+			end
+			keys
+		end
+	end
 
-  get '/' do
-    File.read('index.html')
-  end
+	get '/' do
+		File.read('index.html')
+	end
 
-  post '/login' do
-	  puts "/login params="+params.inspect
-	  res = Auth.login(params)
-	  puts "res="+res.inspect
-	  halt 403, res[:msg] if !res[:status]
-	  session[:token] = res[:token]
-	  json = res.to_json
-	  puts "json="+json
-	  json
-  end
+	post '/login' do
+		puts "/login params="+params.inspect
+		res = Auth.login(params)
+		puts "res="+res.inspect
+		halt 403, res[:msg] if !res[:status]
+		session[:token] = res[:token]
+		session[:uid] = res[:uid]
+		json = res.to_json
+		puts "json="+json
+		json
+	end
 
-  post '/logout' do
-	  puts "/logout params="+params.inspect
-	  res = Auth.logout(params)
-	  session[:token] = nil
-	  json = res.to_json
-	  puts "json="+json
-	  json
-  end
+	post '/logout' do
+		puts "/logout params="+params.inspect
+		res = Auth.logout(params)
+		session[:token] = nil
+		session[:uid] = nil
+		json = res.to_json
+		puts "json="+json
+		json
+	end
 
-  # data format
-  # global
-  # 	options
-  # names
-  # 	default
-  # 		options
-  # 		stats
-  # 	steeve
-  # 		options: {
-  # 		},
-  # 		stats: {
-  # 			"+"
-  # 				"x" : []
-  # 				"y0": []
-  # 				"y1": []
-  # 			"-"
-  # 			"x"
-  # 			"/"
-  # 			}
-  # 	etienne
-  # 		options
-  # 		stats
-  #
-  get '/mathflash.?:format?' do
-    format = params[:format]
-    json = read_sync
-    pre data_section(json), format
-  end
+	# data format
+	# global
+	# 	options
+	# names
+	# 	default
+	# 		options
+	# 		stats
+	# 	steeve
+	# 		options: {
+	# 		},
+	# 		stats: {
+	# 			"+"
+	# 				"x" : []
+	# 				"y0": []
+	# 				"y1": []
+	# 			"-"
+	# 			"x"
+	# 			"/"
+	# 			}
+	# 	etienne
+	# 		options
+	# 		stats
+	#
+	get '/mathflash.?:format?' do
+		format = params[:format]
+		json = read_sync
+		pre data_section(json), format
+	end
 
-  get '/mathflash/global.?:format?' do
-    format = params[:format] || 'json'
-    json = read_sync
-    pre data_section(json, [:global]), format
-  end
+	get '/mathflash/global.?:format?' do
+		format = params[:format] || 'json'
+		json = read_sync
+		pre data_section(json, [:global]), format
+	end
 
-  get '/mathflash/global/*.?:format?' do
-    format = params[:format] || 'json'
-    puts 'splat=' + params['splat'].inspect
-    json = read_sync
-    keys = splat_keys(params['splat'], [:global])
-    pre data_section(json, keys), format
-  end
+	get '/mathflash/global/*.?:format?' do
+		format = params[:format] || 'json'
+		puts 'splat=' + params['splat'].inspect
+		json = read_sync
+		keys = splat_keys(params['splat'], [:global])
+		pre data_section(json, keys), format
+	end
 
-  get '/mathflash/names.?:format?' do
-    format = params[:format] || 'json'
-    json = read_sync
-    pre data_section(json, [:names]).keys, format
-  end
+	get '/mathflash/names.?:format?' do
+		format = params[:format] || 'json'
+	names=["default"]
+	$db.execute('select name from names where uid == :uid', "uid"=>session["uid"]) { |row|
+		name=row['name']
+		$log.debug "name=#{name}"
+		names << name
+	}
+	pre names, format
+	end
 
-  get '/mathflash/names/*.?:format?' do
-    format = params[:format] || 'json'
-    puts "format=#{format} splat=" + params['splat'].inspect
-    json = read_sync
-    keys = splat_keys(params['splat'], [:names])
-    pre data_section(json, keys), format
-  end
+	post '/mathflash/names' do
+		puts "/login params="+params.inspect
+		request.body.rewind  # in case someone already read it
+		data = JSON.parse request.body.read
+		$log.debug "data=#{data.inspect}"
+		"Ok"
+	end
 
-  run!
+	run!
 end
 
