@@ -2,25 +2,25 @@
   "defaults": {
     "left_max": 12,
     "right_max" : 12,
-    "number_max": 50,
-    "timeout_max": 0
+    "count": 50,
+    "timeout": 0
   },
   "enzo": {
     "left_max": 10,
     "right_max" : 10,
-    "number_max": 50,
-    "timeout_max": 0
+    "count": 50,
+    "timeout": 0
   },
   "etienne": {
     "left_max": 12,
     "right_max" : 12,
-    "number_max": 50,
-    "timeout_max": 0
+    "count": 50,
+    "timeout": 0
   },
   "steeve": {
     "left_max": 20,
     "right_max" : 20,
-    "number_max": 50,
-    "timeout_max": 0
+    "count": 50,
+    "timeout": 0
   }
 }

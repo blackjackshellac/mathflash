@@ -64,9 +64,7 @@ function init_controls() {
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {
         set_alert("alert", statusTxt, content + " loaded successfully!");
-        var options = loadOptions();
-        var name = loadName();
-        setOptionsControls(name);
+        loadName();
         clearTimeoutProgress();
 
         $("#options_defaults,#options_save").click(function(e) {
@@ -87,7 +85,7 @@ function init_controls() {
   });
 
   $("#addition,#subtraction,#multiplication,#division").click(function(e) {
-    var oper = title_from(e, loadName());
+    var oper = title_from(e, getName());
     var content = "content/maths.html";
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt == "success") {

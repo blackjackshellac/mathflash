@@ -12,9 +12,11 @@ CREATE TABLE IF NOT EXISTS "names" (
 	`left_max`	INTEGER NOT NULL DEFAULT 10,
 	`right_max`	INTEGER NOT NULL DEFAULT 10,
 	`count`	INTEGER NOT NULL DEFAULT 25,
-	`timeout`	INTEGER NOT NULL DEFAULT 0
+	`timeout`	INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY(`uid`)
 );
-CREATE INDEX IF NOT EXISTS index_names ON names (name);
+DROP INDEX IF EXISTS index_names;
+CREATE UNIQUE INDEX IF NOT EXISTS index_uid_name on names (uid, name);
 
 CREATE TABLE IF NOT EXISTS "stats" (
 	`uid`	INTEGER NOT NULL,
@@ -26,8 +28,9 @@ CREATE TABLE IF NOT EXISTS "stats" (
 );
 CREATE INDEX IF NOT EXISTS index_stats on stats (operation,timestamp);
 
-CREATE TABLE IF NOT EXISTS "foo" (
-	`uid`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	'bar'	TEXT NOT NULL UNIQUE
+CREATE TABLE IF NOT EXISTS "global" (
+	`uid`	INTEGER NOT NULL,
+	`name`	TEXT NOT NULL DEFAULT 'default',
+	`operation`	TEXT NOT NULL DEFAULT '+',
+	PRIMARY KEY(`uid`)
 );
-

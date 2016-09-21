@@ -21,7 +21,7 @@ var OPERATION_LOOKUP = [ SYM_ADD, SYM_SUB, SYM_MUL, SYM_DIV ];
 
 var g_done = false;
 var g_incorrect = [];
-var g_number_max = 0;
+var g_count = 0;
 var g_number_cur = 0;
 var g_number_correct = 0;
 var g_timeout = 0;
@@ -36,7 +36,7 @@ var g_stats_dataset = 0;
 /*
  ** g_stats
  * ds = date in seconds new Date().getTime()/1000
- * pc = percent (g_number_correct) / g_number_max * 100;
+ * pc = percent (g_number_correct) / g_count * 100;
  * ts = ave response time in seconds
  *
 */
@@ -62,8 +62,8 @@ function recordStats(sym) {
   }
   var now = getTimeSecs();
   var then = g_stats[G_STAT_DATE];
-  g_stats[G_STAT_PC] = Math.floor(g_number_correct*100 / g_number_max);
-  g_stats[G_STAT_AVETIME] = (now-then)/g_number_max;
+  g_stats[G_STAT_PC] = Math.floor(g_number_correct*100 / g_count);
+  g_stats[G_STAT_AVETIME] = (now-then)/g_count;
   saveStats(sym, g_stats);
   g_stats_sym = sym;
 }
@@ -90,12 +90,12 @@ function getRandom(min, max) {
 
 function setProgress() {
   // "progress-number"
-  // attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_number_max)
-  var pc = Math.floor(g_number_cur * 100 / g_number_max);
+  // attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_count)
+  var pc = Math.floor(g_number_cur * 100 / g_count);
   var pcc = Math.floor(g_number_correct * 100 / g_number_cur);
   var width = "width: " + pc + "%";
-  var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_number_max + ")";
-  $("#progress-number").attr('aria-valuenow', g_number_cur).attr('aria-valuemax', g_number_max).attr('style', width).html(text);
+  var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_count + ")";
+  $("#progress-number").attr('aria-valuenow', g_number_cur).attr('aria-valuemax', g_count).attr('style', width).html(text);
 }
 
 function setTimeoutProgress() {
@@ -128,7 +128,7 @@ function setNumbers(sym) {
 function getNumbers(sym) {
   var option = g_options[g_name];
 
-  if (g_number_cur == g_number_max) {
+  if (g_number_cur == g_count) {
     if (g_incorrect.length > 0) {
       $("#go").text("Retry!");
       return g_incorrect.pop();
@@ -204,7 +204,7 @@ function createProgress() {
 
   //<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
   dpp.addClass("progress-bar progress-bar-success");
-  dpp.attr('id', "progress-number").attr('role', "progressbar").attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_number_max);
+  dpp.attr('id', "progress-number").attr('role', "progressbar").attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_count);
 
   dp.append(dpp);
   ptd.append(dp);
@@ -367,19 +367,19 @@ function resetResponseCounter() {
   g_incorrect = [];
   g_number_cur = 0;
   g_number_correct = 0;
-  g_number_max = getIntegerOption("number_max");
+  g_count = getIntegerOption("count");
   $("#answer").removeAttr('disabled').focus();
   $("#checkmark").attr('src', HAPPY_CHECK);
   $("#go").text("Go!");
 
-  g_timeout = getIntegerOption("timeout_max") * 2000;
+  g_timeout = getIntegerOption("timeout") * 2000;
   g_timeout_cur = 0;
 
   resetStats();
 }
 
 function incCounters(correct) {
-  if (g_number_cur == g_number_max) {
+  if (g_number_cur == g_count) {
     return g_number_cur;
   }
   g_number_cur++;

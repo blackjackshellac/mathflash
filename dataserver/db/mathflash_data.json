@@ -3,8 +3,8 @@
     "options": {
       "left_max": "10",
       "right_max": "10",
-      "number_max": "50",
-      "timeout_max": "0"
+      "count": "50",
+      "timeout": "0"
     },
     "name": "steeve"
   },
@@ -13,8 +13,8 @@
       "options": {
         "left_max": "10",
         "right_max": "10",
-        "number_max": "50",
-        "timeout_max": "0"
+        "count": "50",
+        "timeout": "0"
       },
       "stats": {
       }
@@ -23,8 +23,8 @@
       "options": {
         "left_max": "12",
         "right_max": "12",
-        "number_max": "50",
-        "timeout_max": "0"
+        "count": "50",
+        "timeout": "0"
       },
       "stats": {
       }
@@ -33,8 +33,8 @@
       "options": {
         "left_max": "12",
         "right_max": "4",
-        "number_max": "25",
-        "timeout_max": "0"
+        "count": "25",
+        "timeout": "0"
       },
       "stats": {
       }
@@ -43,8 +43,8 @@
       "options": {
         "left_max": "12",
         "right_max": "12",
-        "number_max": "10",
-        "timeout_max": "0"
+        "count": "10",
+        "timeout": "0"
       },
       "stats": {
         "+": {
@@ -81,8 +81,8 @@
       "options": {
         "left_max": "20",
         "right_max": "12",
-        "number_max": "5",
-        "timeout_max": "0"
+        "count": "5",
+        "timeout": "0"
       },
       "stats": {
       }

@@ -58,6 +58,14 @@ Auth::set_logger($log)
 $log.info "Environment variable MFSD=#{MFSD}"
 $log.die "Mathflash server data directory not found: #{MFSD}" unless File.directory?(MFSD)
 
+OPTION_DEFS={
+	"left_max"=>10,
+	"right_max"=>10,
+	"count"=>25,
+	"timeout"=>0
+}
+OPTION_KEYS=OPTION_DEFS.keys
+
 $opts = {
 	dir: File.dirname(__FILE__),
 	port: 1963,
@@ -300,29 +308,28 @@ class MathFlashDataServer < Sinatra::Base
 		pre data_section(json), format
 	end
 
-	get '/mathflash/global.?:format?' do
+	get '/mathflash/global/name.?:format?' do
 		format = params[:format] || 'json'
-		json = read_sync
-		pre data_section(json, [:global]), format
-	end
-
-	get '/mathflash/global/*.?:format?' do
-		format = params[:format] || 'json'
-		puts 'splat=' + params['splat'].inspect
-		json = read_sync
-		keys = splat_keys(params['splat'], [:global])
-		pre data_section(json, keys), format
+		name="default"
+		$db.execute('select name from global where uid == :uid', "uid"=>session["uid"]) { |row|
+			name=row['name']
+			$log.debug "name=#{name}"
+		}
+		data={
+			"name"=>name
+		}
+		pre data, format
 	end
 
 	get '/mathflash/names.?:format?' do
 		format = params[:format] || 'json'
-	names=["default"]
-	$db.execute('select name from names where uid == :uid', "uid"=>session["uid"]) { |row|
-		name=row['name']
-		$log.debug "name=#{name}"
-		names << name
-	}
-	pre names, format
+		names=["default"]
+		$db.execute('select name from names where uid == :uid', "uid"=>session["uid"]) { |row|
+			name=row['name']
+			$log.debug "name=#{name}"
+			names << name
+		}
+		pre names, format
 	end
 
 	post '/mathflash/names' do
@@ -331,6 +338,69 @@ class MathFlashDataServer < Sinatra::Base
 		data = JSON.parse request.body.read
 		$log.debug "data=#{data.inspect}"
 		"Ok"
+	end
+
+	get '/mathflash/options.?:format?' do
+		format = params[:format] || 'json'
+		name = params["name"]
+		uid = session["uid"]
+		data = {
+			:options => {}
+		}
+
+		if "default".eql?(name)
+			data[:options]=OPTION_DEFS
+		else
+			$db.execute('select * from names where uid == :uid AND name == :name LIMIT 1', "uid"=>uid, "name"=>name) { |row|
+				OPTION_KEYS.each { |key|
+					data[:options][key]=row[key]
+				}
+			}
+			if data[:options].empty?
+				data[:msg]="Options not found for uid %s and name %s, using defaults" % [ uid, name ]
+				data[:options]=OPTION_DEFS
+			end
+		end
+		pre data, format
+	end
+
+	post '/mathflash/options.?:format?' do
+		format = params[:format] || 'json'
+		name = params["name"]
+		uid = session["uid"]
+		options = JSON.parse(params["options"])
+		left_max = options["left_max"]
+		right_max = options["right_max"]
+		count = options["count"]
+		timeout = options["timeout"]
+
+		data = {
+			:status => true,
+			:msg => ""
+		}
+
+		unless "default".eql?(name)
+			begin
+				$log.debug "uid=#{uid} name=#{name} options=#{options.to_json}"
+				$db.execute('INSERT OR REPLACE INTO names (uid, name, left_max, right_max, count, timeout) VALUES (:uid,:name,:left_max,:right_max,:count,:timeout)',
+							{
+								"uid"=>uid,
+								"name"=>name,
+								"left_max"=>left_max,
+								"right_max"=>right_max,
+								"count"=>count,
+								"timeout"=>timeout
+							} ) { |row|
+						$log.debug "row=#{row.inspect}"
+					}
+				data[:status]=true
+				data[:msg]=""
+			rescue => e
+				$log.error e.message
+				halt 404, "failed to update record for uid=#{uid} and name=#{name} with options=#{options.to_json}: #{e.message}"
+			end
+		end
+		pre data, format
 	end
 
 	run!

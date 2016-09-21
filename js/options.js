@@ -1,13 +1,13 @@
 var LEFT_MAX = "10";
 var RIGHT_MAX = "10";
-var NUMBER_MAX = "50";
-var TIMEOUT_MAX = "0"; // no timeout
+var COUNT = "50";
+var TIMEOUT = "0"; // no timeout
 var NAME_DEF = "default";
 var OPTION_DEF = {
   left_max: LEFT_MAX,
   right_max: RIGHT_MAX,
-  number_max: NUMBER_MAX,
-  timeout_max: TIMEOUT_MAX
+  count: COUNT,
+  timeout: TIMEOUT
 };
 
 var g_options = initializeOptions();
@@ -17,8 +17,8 @@ var g_jsonFile = null;
 
 function makeJsonFile() {
   var data = {};
-  data["options"] = loadOptions();
-  data["name"] = loadName();
+  data["name"] = g_name;
+  data["options"] = loadOptions(g_name);
   data["stats"] = loadStats();
   var json = JSON.stringify(data, null, 4);
 
@@ -39,74 +39,104 @@ function initializeOptions() {
   return options;
 }
 
-function setOptionsControls(name) {
-  var option = g_options[name];
-  if (!option) {
-    g_name = NAME_DEF;
-    option = OPTION_DEF;
-    set_alert("alert", "error", "options not found for name: " + name);
-  } else {
-    g_name = name;
-  }
-  $("#name").val(g_name);
-  $("#left_max").val(option.left_max);
-  $("#right_max").val(option.right_max);
-  $("#number_max").val(option.number_max);
-  $("#timeout_max").val(option.timeout_max);
+function setOptionsControls(name, options) {
+	$("#name").val(name);
+	$("#left_max").val(options.left_max);
+	$("#right_max").val(options.right_max);
+	$("#count").val(options.count);
+	$("#timeout").val(options.timeout);
 }
 
 function getOptionsControls() {
   var options = {};
   options.left_max = $("#left_max").val();
   options.right_max = $("#right_max").val();
-  options.number_max = $("#number_max").val();
-  options.timeout_max = $("#timeout_max").val();
+  options.count = $("#count").val();
+  options.timeout = $("#timeout").val();
   return options;
 }
 
-function loadName() {
-  var name = localStorage["name"];
-  if (!name) {
-    name = NAME_DEF;
-    saveName(name);
-  }
-  g_name = name;
-  return name;
+function getName() {
+	if (!g_name) {
+		g_name = NAME_DEF;
+	}
+	return g_name;
+}
+
+function getParams() {
+	var params = {
+		"email": $.cookie('email'),
+		"token": $.cookie('token')
+	};
+	return params;
+}
+
+function loadOptions(name) {
+	var params=getParams();
+	params["name"]=name
+	$.get("/mathflash/options", params)
+		.done(function(data) {
+			console.log(data);
+			res=JSON.parse(data);
+			options=res["options"];
+			msg=res["msg"];
+			if (msg !== undefined) {
+	    		set_alert("alert", "error", msg);
+			}
+		})
+		.fail(function(data) {
+			alert(data.responseText);
+			options=OPTION_DEF;
+		})
+		.always(function(data) {
+			setOptionsControls(name, options)
+		});
+}
+
+function loadName(name) {
+	if (name !== undefined) {
+		loadOptions(name);
+		return;
+	}
+	var params = getParams();
+	$.get("/mathflash/global/name", params)
+		.done(function(data) {
+			res=JSON.parse(data);
+			name=res["name"];
+			console.log("name="+name);
+		})
+		.fail(function(data) {
+			alert(data.responseText);
+			name="default";
+		})
+		.always(function(data) {
+			loadOptions(name);
+		});
 }
 
 function saveName(name) {
-  localStorage["name"] = name;
   g_name = name;
 }
 
-function saveOptions() {
-  localStorage["options"] = JSON.stringify(g_options);
-  return g_options;
+function saveOptions(name, options) {
+	var params=getParams();
+	params["name"]=name
+	params["options"]=JSON.stringify(options)
+	$.post("/mathflash/options", params)
+		.done(function(data) {
+			res=JSON.parse(data);
+			console.log("res="+res);
+		})
+		.fail(function(data) {
+    		set_alert("alert", "error", data.responseText);
+		})
+		.always(function(data) {
+		});
 }
 
 function getOption(value, def) {
   var option = localStorage[value];
   return !option ? def : option;
-}
-
-function loadOptions() {
-  var options = localStorage["options"];
-  try {
-    if (options != undefined) {
-      options = JSON.parse(options);
-    }
-  } catch (e) {
-    alert("Unable to parse options from localStorage: " + e);
-    options = undefined;
-  }
-  if (!options) {
-    options = saveOptions();
-    saveName(NAME_DEF);
-  }
-
-  g_options = options;
-
-  return options;
 }
 
 /*
@@ -170,8 +200,7 @@ function getIntegerOption(key) {
 function goOptionsDefaults() {
   var name = NAME_DEF;
   var options = initializeOptions();
-  saveName(name);
-  saveOptions(options);
+  saveOptions(name, options);
   setOptionsControls(name, options);
   set_alert("alert", "success", "using defaults for name=" + name);
 }
@@ -184,7 +213,7 @@ function goOptionsSave() {
   }
   saveName(name);
   g_options[name] = getOptionsControls();
-  saveOptions();
+  saveOptions(name, g_options[name]);
   fillNamesMenu();
 
   set_alert("alert", "success", "Saved options for name=" + name);
@@ -203,23 +232,17 @@ function fillNames(names) {
   $('ul#name_list.dropdown-menu li a').click(function(e) {
     var id = e.target.id;
     var name = $("#" + id).text();
-    setOptionsControls(name);
+    loadName(name);
     e.preventDefault();
   });
 }
 
 function fillNamesMenu() {
-  // <li><a id="name-list-0" href="#">default</a></li>
   getNames(fillNames);
 }
 
 function getNames(fillNamesCallback) {
-	var token = $.cookie('token');
-	var email = $.cookie('email');
-	var params = {
-		"email": email,
-		"token": token
-	};
+	var params = getParams();
 	var res=[];
 	$.get("/mathflash/names", params)
 		.done(function(data) {
@@ -228,7 +251,7 @@ function getNames(fillNamesCallback) {
 			fillNamesCallback(res);
 		})
 		.fail(function(data) {
-			alert(data.responseText);
+    		set_alert("alert", "error", data.responseText);
 		})
 		.always(function(data) {
 		});
