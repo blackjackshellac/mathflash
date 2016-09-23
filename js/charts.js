@@ -1,4 +1,4 @@
-function getChartDataset(stats) {
+function getChartDataset(xyy) {
   if (g_stats_dataset == 0) {
     return [{
       label: "Percent - " + g_stats_sym,
@@ -6,7 +6,7 @@ function getChartDataset(stats) {
       strokeColor: "rgba(220,220,220,0.8)",
       highlightFill: "rgba(220,220,220,0.75)",
       highlightStroke: "rgba(220,220,220,1)",
-      data: stats.y0
+      data: xyy.y0
     }];
   } else {
     return [{
@@ -15,13 +15,13 @@ function getChartDataset(stats) {
       strokeColor: "rgba(151,187,205,0.8)",
       highlightFill: "rgba(151,187,205,0.75)",
       highlightStroke: "rgba(151,187,205,1)",
-      data: stats.y1
+      data: xyy.y1
     }];
 
   }
 }
 
-function getChart2BetaDataset(stats) {
+function getChart2BetaDataset(xyy) {
   if (g_stats_dataset == 0) {
     return [{
       label: "Percent - " + g_stats_sym,
@@ -43,7 +43,7 @@ function getChart2BetaDataset(stats) {
       hoverBorderColor: "rgba(220,220,220,1)",
 
       // The actual data
-      data: stats.y0,
+      data: xyy.y0,
 
       // String - If specified, binds the dataset to a certain y-axis. If not specified, the first y-axis is used.
       //yAxisID: "y-axis-1",
@@ -57,18 +57,37 @@ function getChart2BetaDataset(stats) {
       hoverBackgroundColor: "rgba(220,220,220,0.2)",
       hoverBorderColor: "rgba(220,220,220,1)",
       //yAxisID: "y-axis-2",
-      data: stats.y1
+      data: xyy.y1
     }];
   }
 }
 
-function getDates(stats) {
+function getDates(xyy) {
   var dates = [];
-  for (var i = 0; i < stats.x.length; i++) {
-    var d = new Date(stats.x[i] * 1000);
+  for (var i = 0; i < xyy.x.length; i++) {
+    var d = new Date(xyy.x[i] * 1000);
     dates.push(d.toLocaleString());
   }
   return dates;
+}
+
+/*
+ * extract xyy data for (x) time, (y0) percent and (y1) ave time
+ */
+function getXYY(stats) {
+	var xyy = {
+		x: [],
+		y0: [],
+		y1: []
+	}
+	for (var i=0; i < stats.length; i++) {
+		stat=stats[i];
+		xyy.x.push(stat.stimestamp);
+		xyy.y0.push(stat.percent);
+		var ave_time=Math.round((stat.etimestamp-stat.stimestamp)/stat.count);
+		xyy.y1.push(ave_time);
+	}
+	return xyy;
 }
 
 function loadChart(stats_sym, stats_dataset) {
@@ -79,21 +98,12 @@ function loadChart(stats_sym, stats_dataset) {
   var name = loadName();
   var stats = loadStats();
 
-  if (stats[name] === undefined) {
-    set_alert("alert", "warning", "No stats for name: "+name);
-    return;
-  }
-  // TODO need to handle all symbols
-  stats = stats[name][g_stats_sym];
-  if (stats === undefined) {
-    set_alert("alert", "warning", "No "+g_stats_sym+" stats for "+name);
-    return;
-  }
+  var xyy = getXYY(stats);
 
-  var dates = getDates(stats);
+  var dates = getDates(xyy);
   var barChartData = {
     labels: dates,
-    datasets: getChartDataset(stats)
+    datasets: getChartDataset(xyy)
   };
   var options = {
 

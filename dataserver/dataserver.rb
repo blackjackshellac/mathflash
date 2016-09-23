@@ -58,14 +58,6 @@ Auth::set_logger($log)
 $log.info "Environment variable MFSD=#{MFSD}"
 $log.die "Mathflash server data directory not found: #{MFSD}" unless File.directory?(MFSD)
 
-OPTION_DEFS={
-	"left_max"=>10,
-	"right_max"=>10,
-	"count"=>25,
-	"timeout"=>0
-}
-OPTION_KEYS=OPTION_DEFS.keys
-
 $opts = {
 	dir: File.dirname(__FILE__),
 	port: 1963,
@@ -102,6 +94,27 @@ $opts = OParser.parse($opts, "#{MD}/data/help.txt") { |opts|
 }
 
 class MathFlashDataServer < Sinatra::Base
+	OPTION_DEFS={
+		"left_max"=>10,
+		"right_max"=>10,
+		"count"=>25,
+		"timeout"=>0
+	}
+	OPTION_KEYS=OPTION_DEFS.keys
+
+	STATS_KEYS=%w/uid, operation, stimestamp, etimestamp, correct, count, percent/
+
+	SQL_SELECT_NAME_GLOBAL='select name from global where uid == :uid'
+	SQL_UPDATE_NAME_GLOBAL='UPDATE global SET name=:name WHERE uid == :uid'
+
+	SQL_SELECT_NAME_NAMES='select name from names where uid == :uid'
+	SQL_SELECT_ALL_NAMES='select * from names where uid == :uid AND name == :name LIMIT 1'
+
+	SQL_INSERT_REPLACE_OPTIONS='INSERT OR REPLACE INTO names (uid, name, left_max, right_max, count, timeout) VALUES (:uid,:name,:left_max,:right_max,:count,:timeout)'
+
+	SQL_SELECT_STATS='SELECT * FROM stats WHERE uid==:uid AND stimestamp >= :oldest AND stimestamp <= :newest ORDER BY stimestamp'
+	SQL_INSERT_STATS='INSERT INTO stats (uid, operation, stimestamp, etimestamp, correct, count, percent) VALUES(:uid, :operation, :stimestamp, :etimestamp, :correct, :count, :percent)'
+
 	def initialize
 		Dir.chdir(DOC_ROOT)
 		$log.info 'Working in ' + Dir.pwd
@@ -135,7 +148,7 @@ class MathFlashDataServer < Sinatra::Base
 		params[:db]=$db
 
 		$log.debug "path_info="+request.path_info
-		$log.debug "token="+(params.key?(:token) ? params[:token] : "no token")
+		$log.debug "token="+(params.key?("token") ? params["token"] : "no token")
 		$log.debug "params="+params.inspect
 		$log.debug "client ip="+request.ip
 
@@ -311,7 +324,7 @@ class MathFlashDataServer < Sinatra::Base
 	get '/mathflash/global/name.?:format?' do
 		format = params[:format] || 'json'
 		name="default"
-		$db.execute('select name from global where uid == :uid', "uid"=>session["uid"]) { |row|
+		$db.execute(SQL_SELECT_NAME_GLOBAL, "uid"=>session["uid"]) { |row|
 			name=row['name']
 			$log.debug "name=#{name}"
 		}
@@ -321,10 +334,28 @@ class MathFlashDataServer < Sinatra::Base
 		pre data, format
 	end
 
+	post '/mathflash/global/name.?:format?' do
+		format = params[:format] || 'json'
+		name=params["name"]
+		uid=session["uid"]
+		data={
+			:status => true,
+			:msg => ""
+		}
+		begin
+			$db.execute(SQL_UPDATE_NAME_GLOBAL, "name"=>name, "uid"=>uid) { |row|
+				$log.debug "row=#{row.inspect}"
+			}
+		rescue => e
+			halt 404, e.message
+		end
+		pre data, format
+	end
+
 	get '/mathflash/names.?:format?' do
 		format = params[:format] || 'json'
 		names=["default"]
-		$db.execute('select name from names where uid == :uid', "uid"=>session["uid"]) { |row|
+		$db.execute(SQL_SELECT_NAME_NAMES, "uid"=>session["uid"]) { |row|
 			name=row['name']
 			$log.debug "name=#{name}"
 			names << name
@@ -351,7 +382,7 @@ class MathFlashDataServer < Sinatra::Base
 		if "default".eql?(name)
 			data[:options]=OPTION_DEFS
 		else
-			$db.execute('select * from names where uid == :uid AND name == :name LIMIT 1', "uid"=>uid, "name"=>name) { |row|
+			$db.execute(SQL_SELECT_ALL_NAMES, "uid"=>uid, "name"=>name) { |row|
 				OPTION_KEYS.each { |key|
 					data[:options][key]=row[key]
 				}
@@ -369,10 +400,8 @@ class MathFlashDataServer < Sinatra::Base
 		name = params["name"]
 		uid = session["uid"]
 		options = JSON.parse(params["options"])
-		left_max = options["left_max"]
-		right_max = options["right_max"]
-		count = options["count"]
-		timeout = options["timeout"]
+		options["uid"]=uid
+		options["name"]=name
 
 		data = {
 			:status => true,
@@ -382,23 +411,65 @@ class MathFlashDataServer < Sinatra::Base
 		unless "default".eql?(name)
 			begin
 				$log.debug "uid=#{uid} name=#{name} options=#{options.to_json}"
-				$db.execute('INSERT OR REPLACE INTO names (uid, name, left_max, right_max, count, timeout) VALUES (:uid,:name,:left_max,:right_max,:count,:timeout)',
-							{
-								"uid"=>uid,
-								"name"=>name,
-								"left_max"=>left_max,
-								"right_max"=>right_max,
-								"count"=>count,
-								"timeout"=>timeout
-							} ) { |row|
+				$db.execute(SQL_INSERT_REPLACE_OPTIONS, options) { |row|
 						$log.debug "row=#{row.inspect}"
 					}
 				data[:status]=true
 				data[:msg]=""
 			rescue => e
-				$log.error e.message
+				$log.error e.class+": "+e.message
 				halt 404, "failed to update record for uid=#{uid} and name=#{name} with options=#{options.to_json}: #{e.message}"
 			end
+		end
+		pre data, format
+	end
+
+	get '/mathflash/stats.?:format?' do
+		format = params[:format] || 'json'
+		name = params["name"]
+
+		uid = session["uid"]
+		oldest=params["oldest"]||0
+		newest=params["newest"]||Time.now.to_i
+		
+		data={
+			"uid"=>uid,
+			"oldest"=>oldest,
+			"newest"=>newest
+		}
+		stats = []
+		$log.debug "sql=#{SQL_SELECT_STATS} data=#{data.inspect}"
+		$db.execute(SQL_SELECT_STATS, data) { |row|
+			$log.debug "row=#{row.inspect}"
+			stat={}
+			STATS_KEYS.each { |key|
+				stat[key]=row[key]
+			}
+			stats << stat
+		}
+		stats
+	end
+
+	post '/mathflash/stats.?:format?' do
+		format = params[:format] || 'json'
+		name = params["name"]
+		uid = session["uid"]
+		stats = {}
+		data = {
+			:status => true,
+			:msg => ""
+		}
+		begin
+			stats = JSON.parse(params["stats"])
+			stats["uid"]=uid
+			$log.debug "stats=#{stats.inspect}"
+			$log.debug "sql=#{SQL_INSERT_STATS}"
+			$db.execute(SQL_INSERT_STATS, stats) { |row|
+				$log.debug "row=#{row.inspect}"
+			}
+		rescue => e
+			$log.error e.class+": "+e.message
+			halt 404, "failed to update stats for uid=#{uid} and name=#{name} with stats=#{stats.to_json}"
 		end
 		pre data, format
 	end

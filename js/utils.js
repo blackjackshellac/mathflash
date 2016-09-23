@@ -1,9 +1,16 @@
-function set_alert(id, type, txt) {
-  if (type == "error") {
-    type = "danger";
-  }
-  $("#" + id).attr('class', "alert alert-" + type);
-  $("#" + id).text(txt);
+function set_alert(id, type, txt, timeout) {
+	if (timeout === undefined) {
+		timeout = 5000;
+	}
+	if (type == "error") {
+		type = "danger";
+	}
+	var aid=$("#"+id);
+	aid.attr('class', "alert alert-" + type);
+	aid.text(txt);
+	window.setTimeout(function() {
+		aid.attr('class', "alert alert-success").text("");
+	}, timeout);
 };
 
 function capitalize(txt) {

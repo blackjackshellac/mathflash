@@ -36,6 +36,7 @@ function init_controls() {
           }
         });
 
+		/*
         $('#dataset-slider').slider({
           formatter: function(value) {
             var dataset=["percent","ave time"][value%2];
@@ -43,14 +44,9 @@ function init_controls() {
             return 'Dataset: ' + dataset;
           }
         });
+		*/
 
         set_alert("alert", statusTxt, content + " loaded successfully!");
-
-        /*
-        window.myBar = new Chart(ctx).Bar(barChartData, {
-          responsive: true
-        });
-        */
 
       } else if (statusTxt === "error") {
         set_alert("alert", statusTxt, "Failed to load " + content);

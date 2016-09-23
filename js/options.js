@@ -33,18 +33,17 @@ function makeJsonFile() {
 }
 
 function initializeOptions() {
-  var options = {};
-  var option = OPTION_DEF;
-  options[NAME_DEF] = option;
-  return options;
+	return OPTION_DEF;
 }
 
 function setOptionsControls(name, options) {
+	g_name = name;
+	g_options = options;
 	$("#name").val(name);
 	$("#left_max").val(options.left_max);
 	$("#right_max").val(options.right_max);
-	$("#count").val(options.count);
-	$("#timeout").val(options.timeout);
+	setCount(options.count);
+	setTimeout(options.timeout);
 }
 
 function getOptionsControls() {
@@ -115,7 +114,19 @@ function loadName(name) {
 }
 
 function saveName(name) {
-  g_name = name;
+	var params = getParams();
+	params["name"]=name;
+	$.post("/mathflash/global/name", params)
+		.done(function(data) {
+			res=JSON.parse(data);
+		})
+		.fail(function(data) {
+			alert(data.responseText);
+			name="default";
+		})
+		.always(function(data) {
+			loadOptions(name);
+		});
 }
 
 function saveOptions(name, options) {
@@ -126,6 +137,7 @@ function saveOptions(name, options) {
 		.done(function(data) {
 			res=JSON.parse(data);
 			console.log("res="+res);
+			saveName(name);
 		})
 		.fail(function(data) {
     		set_alert("alert", "error", data.responseText);
@@ -148,51 +160,40 @@ function getOption(value, def) {
         ts: [ ts, ts, ts ]
       }
 */
-function saveStats(sym, stats) {
-  var s = loadStats();
-  var us = s[g_name];
-  if (us === undefined) {
-    us = {};
-    s[g_name] = us;
-  }
-  var sym_stat = us[sym];
-  if (sym_stat === undefined) {
-    sym_stat = {};
-    sym_stat.x = [];
-    sym_stat.y0 = [];
-    sym_stat.y1 = [];
-    us[sym] = sym_stat;
-  }
-  var x = stats[G_STAT_DATE];
-  var y0 = stats[G_STAT_PC];
-  var y1 = stats[G_STAT_AVETIME];
-
-  sym_stat.x.push(x);
-  sym_stat.y0.push(y0);
-  sym_stat.y1.push(y1);
-
-  localStorage["stats"] = JSON.stringify(s);
+function saveStats(stats) {
+	var params = getParams();
+	params["stats"]=JSON.stringify(stats);
+    $.post("/mathflash/stats", params)
+        .done(function(data) {
+            res=JSON.parse(data);
+        })
+        .fail(function(data) {
+            set_alert("alert", "error", data.responseText, 10000);
+        })
+        .always(function(data) {
+        });
 }
 
 function loadStats() {
-  var s = {};
-
-  try {
-    s = localStorage["stats"];
-    s = (s === undefined) ? {} : JSON.parse(s);
-  } catch (e) {
-    set_alert("alert", "error", "Failed to parse stats");
-    s = {};
-  }
-  return s;
+	var params = getParams();
+	params.oldest=0;
+	$.get("/mathflash/stats", params)
+        .done(function(data) {
+            res=JSON.parse(data);
+        })
+        .fail(function(data) {
+            set_alert("alert", "error", data.responseText, 10000);
+        })
+        .always(function(data) {
+        });
+	return res
 }
 
 function getIntegerOption(key) {
-  var option = g_options[g_name];
+  var option = g_options;
   if (!option) {
     g_options = initializeOptions();
     g_name = NAME_DEF;
-    option = g_options[g_name];
   }
   return parseInt(option[key]);
 }
@@ -212,29 +213,30 @@ function goOptionsSave() {
     return;
   }
   saveName(name);
-  g_options[name] = getOptionsControls();
-  saveOptions(name, g_options[name]);
+  g_options = getOptionsControls();
+  saveOptions(name, g_options);
   fillNamesMenu();
 
   set_alert("alert", "success", "Saved options for name=" + name);
 }
 
 function fillNames(names) {
-  var sul = $('ul#name_list.dropdown-menu');
-  sul.empty();
-  for (var i = 0; i < names.length; i++) {
-    var id = 'name-list-' + i;
-    var li = $('<li></li>')
-    var a = $('<a></a>').attr('id', id).attr('href', '#').text(names[i]);
-    li.append(a);
-    sul.append(li);
-  }
-  $('ul#name_list.dropdown-menu li a').click(function(e) {
-    var id = e.target.id;
-    var name = $("#" + id).text();
-    loadName(name);
-    e.preventDefault();
-  });
+	var sul = $('ul#name_list.dropdown-menu');
+	sul.empty();
+	for (var i = 0; i < names.length; i++) {
+		var id = 'name-list-' + i;
+		var li = $('<li></li>')
+			var a = $('<a></a>').attr('id', id).attr('href', '#').text(names[i]);
+		li.append(a);
+		sul.append(li);
+	}
+	$('ul#name_list.dropdown-menu li a').click(function(e) {
+		var id = e.target.id;
+		var name = $("#" + id).text();
+		loadName(name);
+		saveName(name);
+		e.preventDefault();
+	});
 }
 
 function fillNamesMenu() {

@@ -23,7 +23,7 @@ var g_done = false;
 var g_incorrect = [];
 var g_count = 0;
 var g_number_cur = 0;
-var g_number_correct = 0;
+var g_correct = 0;
 var g_timeout = 0;
 var g_timeout_id = undefined;
 var g_timeout_cur = 0;
@@ -36,7 +36,7 @@ var g_stats_dataset = 0;
 /*
  ** g_stats
  * ds = date in seconds new Date().getTime()/1000
- * pc = percent (g_number_correct) / g_count * 100;
+ * pc = percent (g_correct) / g_count * 100;
  * ts = ave response time in seconds
  *
 */
@@ -57,15 +57,20 @@ function resetStats() {
 }
 
 function recordStats(sym) {
-  if (g_stats[G_STAT_DATE] === undefined) {
-    return;
-  }
-  var now = getTimeSecs();
-  var then = g_stats[G_STAT_DATE];
-  g_stats[G_STAT_PC] = Math.floor(g_number_correct*100 / g_count);
-  g_stats[G_STAT_AVETIME] = (now-then)/g_count;
-  saveStats(sym, g_stats);
-  g_stats_sym = sym;
+	var now = getTimeSecs();
+	var then = g_stats[G_STAT_DATE];
+
+	var stats = {
+		operation: sym,
+		stimestamp: then,
+		etimestamp: now,
+		correct: g_correct,
+		count: g_count,
+		percent: Math.round(g_correct*100 / g_count)
+	};
+	//g_stats[G_STAT_AVETIME] = (now-then)/g_count;
+	saveStats(stats);
+	g_stats_sym = sym;
 }
 
 function getSymbol(oper) {
@@ -92,9 +97,9 @@ function setProgress() {
   // "progress-number"
   // attr('aria-valuenow', "0").attr('aria-valuemin', "0").attr('aria-valuemax', g_count)
   var pc = Math.floor(g_number_cur * 100 / g_count);
-  var pcc = Math.floor(g_number_correct * 100 / g_number_cur);
+  var pcc = Math.floor(g_correct * 100 / g_number_cur);
   var width = "width: " + pc + "%";
-  var text = "" + g_number_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_count + ")";
+  var text = "" + g_correct + " out of " + g_number_cur + " : " + pcc + "% (max=" + g_count + ")";
   $("#progress-number").attr('aria-valuenow', g_number_cur).attr('aria-valuemax', g_count).attr('style', width).html(text);
 }
 
@@ -126,7 +131,7 @@ function setNumbers(sym) {
 }
 
 function getNumbers(sym) {
-  var option = g_options[g_name];
+  var option = g_options;
 
   if (g_number_cur == g_count) {
     if (g_incorrect.length > 0) {
@@ -256,58 +261,58 @@ function getIntText(sid) {
 }
 
 function goClick() {
-  var answer, left, right, sym;
+	var answer, left, right, sym;
 
-  if (g_done) {
-    resetResponseCounter();
-    clearStars(true);
-    clearStars(false);
-    setProgress();
-    return;
-  }
-  if (g_timeout_id != undefined) {
-    clearTimeoutProgress();
-  }
+	if (g_done) {
+		resetResponseCounter();
+		clearStars(true);
+		clearStars(false);
+		setProgress();
+		return;
+	}
+	if (g_timeout_id != undefined) {
+		clearTimeoutProgress();
+	}
 
-  try {
-    answer = getIntVal("#answer");
-    left = getIntText("#left_val");
-    right = getIntText("#right_val");
-    sym = $("#operation").text();
-  } catch (e) {
-    set_alert("alert", "error", e);
-    $("#answer").val("");
-    return;
-  }
+	try {
+		answer = getIntVal("#answer");
+		left = getIntText("#left_val");
+		right = getIntText("#right_val");
+		sym = $("#operation").text();
+	} catch (e) {
+		set_alert("alert", "error", e);
+		$("#answer").val("");
+		return;
+	}
 
-  var res = doOperation(sym, left, right);
-  var correct = (res == answer);
-  var text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
-  if (correct) {
-    //$("#info").text(String.format("{0} {1} {2} = {3}", left, sym, right, answer));
-    $("#info").text("");
-    $("#result").css('color', 'darkgreen');
-  } else {
-    $("#info").text(String.format("{0} {1} {2} ≠ {3}", left, sym, right, answer));
-    $("#result").css('color', 'darkred');
-    g_incorrect.push([left, right]);
-  }
-  $("#result").text(text_result);
+	var res = doOperation(sym, left, right);
+	var correct = (res == answer);
+	var text_result = String.format("{0} {1} {2} = {3}", left, sym, right, res);
+	if (correct) {
+		//$("#info").text(String.format("{0} {1} {2} = {3}", left, sym, right, answer));
+		$("#info").text("");
+		$("#result").css('color', 'darkgreen');
+	} else {
+		$("#info").text(String.format("{0} {1} {2} ≠ {3}", left, sym, right, answer));
+		$("#result").css('color', 'darkred');
+		g_incorrect.push([left, right]);
+	}
+	$("#result").text(text_result);
 
-  setStar(correct);
-  setProgress();
-  setNumbers(sym);
-  if (g_done) {
-    var pc = Math.floor(g_number_correct / g_number_cur * 100);
-    var check = pc > 60 ? HAPPY_CHECK : SAD_CHECK;
-    $("#checkmark").attr('src', check);
-    $("#answer").attr('disabled', 'disabled');
-    $("#go").text("Restart!").focus();
-    recordStats(sym);
-    clearTimeoutProgress();
-  } else {
-    $("#answer").focus();
-  }
+	setStar(correct);
+	setProgress();
+	setNumbers(sym);
+	if (g_done) {
+		var pc = Math.floor(g_correct / g_number_cur * 100);
+		var check = pc > 60 ? HAPPY_CHECK : SAD_CHECK;
+		$("#checkmark").attr('src', check);
+		$("#answer").attr('disabled', 'disabled');
+		$("#go").text("Restart!").focus();
+		recordStats(sym);
+		clearTimeoutProgress();
+	} else {
+		$("#answer").focus();
+	}
 }
 
 function clearStars(little) {
@@ -366,7 +371,7 @@ function resetResponseCounter() {
   g_done = false;
   g_incorrect = [];
   g_number_cur = 0;
-  g_number_correct = 0;
+  g_correct = 0;
   g_count = getIntegerOption("count");
   $("#answer").removeAttr('disabled').focus();
   $("#checkmark").attr('src', HAPPY_CHECK);
@@ -384,7 +389,20 @@ function incCounters(correct) {
   }
   g_number_cur++;
   if (correct) {
-    g_number_correct++;
+    g_correct++;
   }
   return g_number_cur;
+}
+
+function setTimeout(timeout) {
+	if (timeout === undefined) {
+		timeout = 0;
+	}
+	g_timeout = timeout;
+	$("#timeout").val(timeout);
+}
+
+function setCount(count) {
+	g_count = count;
+	$("#count").val(count);
 }
