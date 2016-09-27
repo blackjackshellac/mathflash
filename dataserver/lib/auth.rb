@@ -159,13 +159,14 @@ module Auth
 
 		password = BCrypt::Password.new(user_data[:hash])
 		res[:status] = password == params["password"]
-		if res[:status]
-			user_data[:token] = create_token(user_data)
-			res[:token] = user_data[:token]
-			res[:uid] = user_data[:uid]
-		else
-			res[:msg] = "Password mismatch"
-		end
+		raise "Password mismatch for #{user_data[:email]}" unless res[:status]
+
+		user_data[:token] = create_token(user_data)
+		res[:token] = user_data[:token]
+		res[:uid] = user_data[:uid]
+		res[:user] = user_data[:user]
+		res[:email] = user_data[:email]
+
 		return res
 	end
 

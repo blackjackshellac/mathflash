@@ -90,14 +90,7 @@ function getXYY(stats) {
 	return xyy;
 }
 
-function loadChart(stats_sym, stats_dataset) {
-
-  g_stats_sym = stats_sym;
-  g_stats_dataset = stats_dataset;
-
-  var name = loadName();
-  var stats = loadStats();
-
+function loadChartCallback(stats) {
   var xyy = getXYY(stats);
 
   var dates = getDates(xyy);
@@ -123,4 +116,14 @@ function loadChart(stats_sym, stats_dataset) {
     options: {}
   });
   */
+}
+
+function loadChart(stats_sym, stats_dataset) {
+
+  g_stats_sym = stats_sym;
+  g_stats_dataset = stats_dataset;
+
+  var name = loadName();
+  loadStats(loadChartCallback);
+
 }

@@ -66,6 +66,7 @@ function logout(email, token) {
 	$.post("/logout", params)
 		.done(function(data) {
 			console.log(data);
+			$("#account").val("");
 		})
 		.fail(function(data) {
 			set_alert("alert", "error", "Authentication failed, please login again: "+ data.responseText);
@@ -90,6 +91,7 @@ function login() {
 			$.cookie('email', params.email)
 			$.cookie('persist', params.persist)
 			$.cookie('token', res.token)
+			$("#account").text(res["user"]);
 		})
 		.fail(function(data) {
 			set_alert("alert", "error", data.responseText);

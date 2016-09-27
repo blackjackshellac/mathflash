@@ -102,7 +102,7 @@ class MathFlashDataServer < Sinatra::Base
 	}
 	OPTION_KEYS=OPTION_DEFS.keys
 
-	STATS_KEYS=%w/uid, operation, stimestamp, etimestamp, correct, count, percent/
+	STATS_KEYS=%w/uid operation stimestamp etimestamp correct count percent/
 
 	SQL_SELECT_NAME_GLOBAL='select name from global where uid == :uid'
 	SQL_UPDATE_NAME_GLOBAL='UPDATE global SET name=:name WHERE uid == :uid'
@@ -278,9 +278,13 @@ class MathFlashDataServer < Sinatra::Base
 
 	post '/login' do
 		puts "/login params="+params.inspect
-		res = Auth.login(params)
-		puts "res="+res.inspect
-		halt 403, res[:msg] if !res[:status]
+		begin
+			res = Auth.login(params)
+			puts "res="+res.inspect
+			halt 403, res[:msg] if !res[:status]
+		rescue => e
+			halt 403, e.message
+		end
 		session[:token] = res[:token]
 		session[:uid] = res[:uid]
 		json = res.to_json
@@ -449,11 +453,12 @@ class MathFlashDataServer < Sinatra::Base
 			$log.debug "row=#{row.inspect}"
 			stat={}
 			STATS_KEYS.each { |key|
+				$log.debug "key #{key}=#{row[key]}"
 				stat[key]=row[key]
 			}
 			stats << stat
 		}
-		stats
+		pre stats, format
 	end
 
 	post '/mathflash/stats.?:format?' do

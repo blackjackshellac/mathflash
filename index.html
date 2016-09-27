@@ -17,7 +17,8 @@
 
   <!-- Bootstrap core CSS -->
   <link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet">
-  <link href="/css/bootstrap-slider.min.css" rel="stylesheet">
+  <!-- <link href="/css/bootstrap-slider.min.css" rel="stylesheet"> -->
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/css/bootstrap-slider.css' rel='stylesheet'>
 
   <!-- Custom styles for this template -->
   <link href="/css/mathflash.css" rel="stylesheet">
@@ -51,17 +52,18 @@
           <li><a id="division" href="#">Division</a></li>
           <li><a id="charts" href="#">Charts</a></li>
         </ul>
-        <ul class="nav navbar-nav navbar-right">
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
-            <ul id="nav_menu" class="dropdown-menu">
-              <li><a id="save_options" href="#">Save options ...</a></li>
-              <li><a id="load_options" href="#">Load options ... currently not implemented</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a id="logio" href="#">Login ...</a></li>
-            </ul>
-          </li>
-        </ul>
+		<ul class="nav navbar-nav navbar-right">
+			<li><a id="account">">>"</a></li>
+			<li class="dropdown">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
+			<ul id="nav_menu" class="dropdown-menu">
+				<li><a id="save_options" href="#">Save options ...</a></li>
+				<li><a id="load_options" href="#">Load options ... currently not implemented</a></li>
+				<li role="separator" class="divider"></li>
+				<li><a id="logio" href="#">Login ...</a></li>
+			</ul>
+			</li>
+		</ul>
       </div>
       <!--/.nav-collapse -->
     </div>
@@ -99,7 +101,8 @@
     window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')
   </script>
   <script src="/js/bootstrap/bootstrap.min.js"></script>
-  <script src="/js/bootstrap-slider.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/bootstrap-slider.js'></script>
+  <!-- <script src="/js/bootstrap-slider.min.js"></script> -->
   <script>
     $(document).ready(function() {
       console.log("document loaded");

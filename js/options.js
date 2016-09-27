@@ -175,19 +175,19 @@ function saveStats(stats) {
         });
 }
 
-function loadStats() {
+function loadStats(callback) {
 	var params = getParams();
 	params.oldest=0;
 	$.get("/mathflash/stats", params)
         .done(function(data) {
             res=JSON.parse(data);
+			callback(res);
         })
         .fail(function(data) {
             set_alert("alert", "error", data.responseText, 10000);
         })
         .always(function(data) {
         });
-	return res
 }
 
 function getIntegerOption(key) {

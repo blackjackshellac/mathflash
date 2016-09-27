@@ -28,7 +28,7 @@ function init_controls() {
     $("#content").load(content, function(responseTxt, statusTxt, xhr) {
       if (statusTxt === "success") {
 
-        $('#operations-slider').slider({
+        var op_slider=$('#operations-slider').bootstrapSlider({
           formatter: function(value) {
             var sym = OPERATION_LOOKUP[value % 4];
             loadChart(sym, g_stats_dataset);
