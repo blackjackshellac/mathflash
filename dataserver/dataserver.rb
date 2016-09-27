@@ -171,15 +171,21 @@ class MathFlashDataServer < Sinatra::Base
 			end
 		end
 
-		#$log.debug "session token="+session[:token] if session.key?(:token)
-
-		#unless ['/', '/login'].include?(pi)
-		#  halt 403, "Not authenticated" unless session.key?(:token)
-		#  halt 403, "Token mismatch" unless session[:token].eql?(params[:token])
-		#  break
-		#end
-
 		Dir.chdir(DOC_ROOT)
+
+		unless ['/', '/login' ].include?(pi)
+			halt 403, "No session uid found" unless session[:uid]
+			halt 403, "No session token found" unless session[:token]
+			halt 403, "token mismatch" unless session[:token].eql?(params[:token])
+
+			uid=nil
+			email=params["email"]
+			$db.execute('select uid from users where email == :email', "email"=>email) { |row|
+				uid=row['uid']
+			}
+			halt 403, "uid mismatch for email=#{email}: #{session[:uid]} != #{uid}" if session[:uid] != uid
+		end
+
 		# if request.request_method == 'GET' || request.request_method == 'POST'
 		#    response.headers["Access-Control-Allow-Origin"] = "*"
 		#    response.headers["Access-Control-Allow-Methods"] = "POST, GET"

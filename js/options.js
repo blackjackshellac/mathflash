@@ -43,7 +43,7 @@ function setOptionsControls(name, options) {
 	$("#left_max").val(options.left_max);
 	$("#right_max").val(options.right_max);
 	setCount(options.count);
-	setTimeout(options.timeout);
+	setOptionsTimeout(options.timeout);
 }
 
 function getOptionsControls() {
@@ -84,7 +84,7 @@ function loadOptions(name) {
 			}
 		})
 		.fail(function(data) {
-			alert(data.responseText);
+			set_alert("alert", "error", "failed to load options, using defaults: "+data.responseText);
 			options=OPTION_DEF;
 		})
 		.always(function(data) {
@@ -105,7 +105,7 @@ function loadName(name) {
 			console.log("name="+name);
 		})
 		.fail(function(data) {
-			alert(data.responseText);
+			set_alert("alert", "error", "failed to load default name: "+data.responseText);
 			name="default";
 		})
 		.always(function(data) {
@@ -119,9 +119,10 @@ function saveName(name) {
 	$.post("/mathflash/global/name", params)
 		.done(function(data) {
 			res=JSON.parse(data);
+			set_alert("alert", "info", "Saved default name: "+name);
 		})
 		.fail(function(data) {
-			alert(data.responseText);
+			set_alert("alert", "error", "failed to save name: "+data.responseText);
 			name="default";
 		})
 		.always(function(data) {

@@ -68,7 +68,7 @@ function logout(email, token) {
 			console.log(data);
 		})
 		.fail(function(data) {
-			alert("error" + data.responseText);
+			set_alert("alert", "error", "Authentication failed, please login again: "+ data.responseText);
 		})
 		.always(function(data) {
 			$.removeCookie('token');
@@ -92,7 +92,7 @@ function login() {
 			$.cookie('token', res.token)
 		})
 		.fail(function(data) {
-			alert(data.responseText);
+			set_alert("alert", "error", data.responseText);
 		})
 		.always(function(data) {
 			setup_auth_dialog();

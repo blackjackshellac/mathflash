@@ -1,17 +1,37 @@
+var g_alert_timeout_id = undefined;
+var g_alert_aid = undefined;
+function set_alert_timeout() {
+	g_alert_aid.attr('class', "alert alert-success").text("");
+}
+
 function set_alert(id, type, txt, timeout) {
 	if (timeout === undefined) {
 		timeout = 5000;
 	}
-	if (type == "error") {
-		type = "danger";
+	// success, info, warning, danger
+	switch (type) {
+		case "error":
+			type="danger";
+			break;
+		case "success":
+		case "info":
+		case "warning":
+		case "danger":
+			break;
+		default:
+			type="danger";
+			break;
 	}
-	var aid=$("#"+id);
-	aid.attr('class', "alert alert-" + type);
-	aid.text(txt);
-	window.setTimeout(function() {
-		aid.attr('class', "alert alert-success").text("");
-	}, timeout);
-};
+	g_alert_aid=$("#"+id);
+	g_alert_aid.attr('class', "alert alert-" + type);
+	g_alert_aid.text(txt);
+	if (timeout > 0) {
+		if (g_alert_timeout_id != undefined) {
+			clearTimeout(g_alert_timeout_id);
+		}
+		g_alert_timeout_id = setTimeout(set_alert_timeout, timeout);
+	}
+}
 
 function capitalize(txt) {
   var ctext = txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();

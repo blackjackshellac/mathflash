@@ -394,7 +394,7 @@ function incCounters(correct) {
   return g_number_cur;
 }
 
-function setTimeout(timeout) {
+function setOptionsTimeout(timeout) {
 	if (timeout === undefined) {
 		timeout = 0;
 	}
