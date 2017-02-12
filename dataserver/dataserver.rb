@@ -155,35 +155,41 @@ class MathFlashDataServer < Sinatra::Base
 		$log.debug "session="+session.inspect
 
 		# on dataserver restart session tokens are lost, reload the token in the session
-		if (!session.key?(:token) || !session.key?(:uid)) && params.key?("email")
+		#
+		# TODO figure out why the fecking session "token" and "uid" are disapparing periodically, csrf key value is changing
+		if (!session.key?("token") || !session.key?("uid")) && params.key?("email")
 			begin
 				res = Auth.token_from_email(params)
+				puts "res="+res.inspect
 			rescue => e
 				$log.debug "No user: "+e.message
 				halt 403, "User unknown"
 			end
 
 			$log.debug "res="+res.inspect
-			if res.key?(:token) && res[:status]
+			if res[:status]
 				$log.debug "Found token for email="+params["email"]
-				session[:token] = res[:token]
-				session[:uid] = res[:uid]
+				session["token"] = res[:token]
+				session["uid"] = res[:uid]
+				params["token"] = res[:token]
 			end
 		end
 
 		Dir.chdir(DOC_ROOT)
 
 		unless ['/', '/login' ].include?(pi)
-			halt 403, "No session uid found" unless session[:uid]
-			halt 403, "No session token found" unless session[:token]
-			halt 403, "token mismatch" unless session[:token].eql?(params[:token])
+			halt 403, "No session uid found" unless session["uid"]
+			halt 403, "No session token found" unless session["token"]
+			# TODO why is this failing periodically?
+			$log.warn "token mismatch" unless session["token"].eql?(params[:token])
+			#halt 403, "token mismatch" unless session["token"].eql?(params[:token])
 
 			uid=nil
 			email=params["email"]
 			$db.execute('select uid from users where email == :email', "email"=>email) { |row|
 				uid=row['uid']
 			}
-			halt 403, "uid mismatch for email=#{email}: #{session[:uid]} != #{uid}" if session[:uid] != uid
+			halt 403, "uid mismatch for email=#{email}: #{session["uid"]} != #{uid}" if session["uid"] != uid
 		end
 
 		# if request.request_method == 'GET' || request.request_method == 'POST'
@@ -285,8 +291,8 @@ class MathFlashDataServer < Sinatra::Base
 		rescue => e
 			halt 403, e.message
 		end
-		session[:token] = res[:token]
-		session[:uid] = res[:uid]
+		session["token"] = res[:token]
+		session["uid"] = res[:uid]
 		json = res.to_json
 		puts "json="+json
 		json
@@ -295,8 +301,8 @@ class MathFlashDataServer < Sinatra::Base
 	post '/logout' do
 		puts "/logout params="+params.inspect
 		res = Auth.logout(params)
-		session[:token] = nil
-		session[:uid] = nil
+		session["token"] = nil
+		session["uid"] = nil
 		json = res.to_json
 		puts "json="+json
 		json
@@ -453,7 +459,7 @@ class MathFlashDataServer < Sinatra::Base
 			$log.debug "row=#{row.inspect}"
 			stat={}
 			STATS_KEYS.each { |key|
-				$log.debug "key #{key}=#{row[key]}"
+				#$log.debug "key #{key}=#{row[key]}"
 				stat[key]=row[key]
 			}
 			stats << stat

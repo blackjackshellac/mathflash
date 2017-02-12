@@ -118,7 +118,9 @@ module Auth
 		user_data = find_by_email(params[:db], params["email"])
 		user_data[:token] = create_token(user_data)
 		res[:token] = user_data[:token]
+		res[:uid] = user_data[:uid]
 		res[:status] = true
+		res[:user_data]=user_data
 		res
 	end
 
